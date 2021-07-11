@@ -1,0 +1,2 @@
+geometry_msgs/Transform[] hand_world_samples
+geometry_msgs/Transform[] camera_marker_samples

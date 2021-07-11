@@ -1,0 +1,23 @@
+cmake_minimum_required(VERSION 3.5)
+project(easy_handeye2_msgs)
+
+find_package(ament_cmake REQUIRED)
+find_package(rosidl_default_generators REQUIRED)
+
+rosidl_generate_interfaces(${PROJECT_NAME}
+        msg/HandeyeCalibration.msg
+        msg/SampleList.msg
+        msg/TargetPoseList.msg
+        srv/calibration/ListAlgorithms.srv
+        srv/calibration/SetAlgorithm.srv
+        srv/calibration/ComputeCalibration.srv
+        srv/calibration/RemoveSample.srv
+        srv/calibration/TakeSample.srv
+        srv/robot_movements/CheckStartingPose.srv
+        srv/robot_movements/EnumerateTargetPoses.srv
+        srv/robot_movements/SelectTargetPose.srv
+        srv/robot_movements/PlanToSelectedTargetPose.srv
+        srv/robot_movements/ExecutePlan.srv
+)
+
+ament_package()
