@@ -29,7 +29,7 @@ class CalibrationMovements:
                  max_acceleration_scaling: float, angle_delta: float, translation_delta: float,
                  move_group_namespace='/'):
         self.node = node
-        # self.client = HandeyeClient()  # TODO: move around marker when eye_on_hand, automatically take samples via trigger topic
+        # self.client = HandeyeClient()  # TODO: move around marker when eye_in_hand, automatically take samples via trigger topic
         if not move_group_namespace.endswith('/'):
             move_group_namespace = move_group_namespace + '/'
         if move_group_namespace != '/':

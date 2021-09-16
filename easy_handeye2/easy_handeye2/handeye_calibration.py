@@ -10,8 +10,8 @@ from geometry_msgs.msg import Vector3, Quaternion, Transform, TransformStamped
 
 @dataclass
 class HandeyeCalibrationParameters(object):
-    namespace: str
-    eye_on_hand: bool
+    name: str
+    eye_in_hand: bool
     robot_base_frame: str
     robot_effector_frame: str
     tracking_base_frame: str
@@ -20,71 +20,30 @@ class HandeyeCalibrationParameters(object):
     move_group_namespace: str = '/'
     move_group: str = 'manipulator'
 
-    @staticmethod
-    def read_from_parameter_server(node: rclpy.node.Node, namespace: str):
-        node.get_logger().info("Loading parameters for calibration {} from the parameters server".format(namespace))
 
-        if not namespace.endswith('/'):
-            namespace = namespace + '/'
+class HandeyeCalibrationParametersProvider:
+    def __init__(self, node: Node):
+        self.node = node
+        # declare and read parameters
+        self.node.declare_parameter('name')
+        self.node.declare_parameter('eye_in_hand')
+        self.node.declare_parameter('robot_base_frame')
+        self.node.declare_parameter('robot_effector_frame')
+        self.node.declare_parameter('tracking_base_frame')
+        self.node.declare_parameter('tracking_marker_frame')
+        self.node.declare_parameter('freehand_robot_movement')
 
-        node.declare_parameter('move_group_namespace')
-        node.declare_parameter('move_group')
-        node.declare_parameter('eye_on_hand')
-        node.declare_parameter('robot_effector_frame')
-        node.declare_parameter('robot_base_frame')
-        node.declare_parameter('tracking_base_frame')
-        node.declare_parameter('tracking_marker_frame')
-        node.declare_parameter('freehand_robot_movement')
-
-        ret = HandeyeCalibrationParameters(namespace=namespace,
-                                           move_group_namespace=node.get_parameter(
-                                               'move_group_namespace').get_parameter_value().string_value,
-                                           move_group=node.get_parameter(
-                                               'move_group').get_parameter_value().string_value,
-                                           eye_on_hand=node.get_parameter(
-                                               'eye_on_hand').get_parameter_value().bool_value,
-                                           robot_effector_frame=node.get_parameter(
-                                               'robot_effector_frame').get_parameter_value().string_value,
-                                           robot_base_frame=node.get_parameter(
-                                               'robot_base_frame').get_parameter_value().string_value,
-                                           tracking_base_frame=node.get_parameter(
-                                               'tracking_base_frame').get_parameter_value().string_value,
-                                           tracking_marker_frame=node.get_parameter(
-                                               'tracking_marker_frame').get_parameter_value().string_value,
-                                           freehand_robot_movement=node.get_parameter(
-                                               'freehand_robot_movement').get_parameter_value().bool_value)
+    def read(self):
+        ret = HandeyeCalibrationParameters(
+            name=self.node.get_parameter('name').get_parameter_value().string_value,
+            eye_in_hand=self.node.get_parameter('eye_in_hand').get_parameter_value().bool_value,
+            robot_base_frame=self.node.get_parameter('robot_base_frame').get_parameter_value().string_value,
+            robot_effector_frame=self.node.get_parameter('robot_effector_frame').get_parameter_value().string_value,
+            tracking_base_frame=self.node.get_parameter('tracking_base_frame').get_parameter_value().string_value,
+            tracking_marker_frame=self.node.get_parameter('tracking_marker_frame').get_parameter_value().string_value,
+            freehand_robot_movement=self.node.get_parameter('freehand_robot_movement').get_parameter_value().bool_value,
+        )
         return ret
-
-    @staticmethod
-    def store_to_parameter_server(node, parameters):
-        namespace = parameters.namespace
-        node.get_logger().info("Storing parameters for calibration {} into the parameters server".format(namespace))
-
-        from rclpy.parameter import Parameter
-
-        p_move_group_namespace = Parameter('move_group_namespace', Parameter.Type.STRING,
-                                           parameters.move_group_namespace)
-        p_move_group = Parameter('move_group', Parameter.Type.STRING, parameters.move_group)
-        p_eye_on_hand = Parameter('eye_on_hand', Parameter.Type.BOOL, parameters.eye_on_hand)
-        p_robot_effector_frame = Parameter('robot_effector_frame', Parameter.Type.STRING,
-                                           parameters.robot_effector_frame)
-        p_robot_base_frame = Parameter('robot_base_frame', Parameter.Type.STRING, parameters.robot_base_frame)
-        p_tracking_base_frame = Parameter('tracking_base_frame', Parameter.Type.STRING, parameters.tracking_base_frame)
-        p_tracking_marker_frame = Parameter('tracking_marker_frame', Parameter.Type.STRING,
-                                            parameters.tracking_marker_frame)
-        p_freehand_robot_movement = Parameter('freehand_robot_movement', Parameter.Type.STRING,
-                                              parameters.freehand_robot_movement)
-
-        node.set_parameters([
-            p_move_group_namespace,
-            p_move_group,
-            p_eye_on_hand,
-            p_robot_effector_frame,
-            p_robot_base_frame,
-            p_tracking_base_frame,
-            p_tracking_marker_frame,
-            p_freehand_robot_movement,
-        ])
 
 
 class HandeyeCalibration(object):
@@ -120,7 +79,7 @@ class HandeyeCalibration(object):
         """
 
         # tf names
-        if self.parameters.eye_on_hand:
+        if self.parameters.eye_in_hand:
             self.transformation.header.frame_id = calibration_parameters.robot_effector_frame
         else:
             self.transformation.header.frame_id = calibration_parameters.robot_base_frame
@@ -189,10 +148,12 @@ class HandeyeCalibration(object):
         return HandeyeCalibration.from_dict(yaml.safe_load(in_yaml))
 
     def filename(self):
-        return HandeyeCalibration.filename_for_namespace(self.parameters.namespace)
+        raise ValueError('TODO')
+        return HandeyeCalibration.filename_for_namespace(self.parameters.name)
 
     @staticmethod
-    def filename_for_namespace(namespace):
+    def filename_for_namespace(name):
+        raise ValueError('TODO')
         return HandeyeCalibration.DIRECTORY + '/' + namespace.rstrip('/').split('/')[-1] + '.yaml'
 
     @staticmethod

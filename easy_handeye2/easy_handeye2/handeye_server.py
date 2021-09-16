@@ -9,17 +9,20 @@ from std_msgs import msg
 from std_srvs import srv
 
 import easy_handeye2 as hec
-from easy_handeye2.handeye_calibration import HandeyeCalibration, HandeyeCalibrationParameters
+from easy_handeye2.handeye_calibration import HandeyeCalibration, HandeyeCalibrationParameters, \
+    HandeyeCalibrationParametersProvider
 from easy_handeye2.handeye_calibration_backend_opencv import HandeyeCalibrationBackendOpenCV
 from easy_handeye2.handeye_sampler import HandeyeSampler
 
 
 class HandeyeServer(rclpy.node.Node):
-    def __init__(self, namespace=None):
+    def __init__(self):
         super().__init__('handeye_server')
-        if namespace is None:
-            namespace = self.get_namespace()
-        self.parameters = HandeyeCalibrationParameters.read_from_parameter_server(self, namespace)
+
+        self.parameters_provider = HandeyeCalibrationParametersProvider(self)
+        self.parameters = self.parameters_provider.read()
+
+        self.get_logger().info(f'Read parameters for calibration "{self.parameters.name}"')
 
         self.sampler = HandeyeSampler(self, handeye_parameters=self.parameters)
         self.calibration_backends = {'OpenCV': HandeyeCalibrationBackendOpenCV()}
@@ -122,7 +125,7 @@ class HandeyeServer(rclpy.node.Node):
             response.valid = False
             return response
         response.valid = True
-        response.calibration.eye_on_hand = self.last_calibration.parameters.eye_on_hand
+        response.calibration.eye_in_hand = self.last_calibration.parameters.eye_in_hand
         response.calibration.transform = self.last_calibration.transformation
         return response
 

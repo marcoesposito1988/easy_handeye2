@@ -23,7 +23,7 @@ class HandeyePublisher(rclpy.node.Node):
         self.get_logger().info("Loading the calibration from file: %s", filename)
         calib = HandeyeCalibration.from_filename(filename)
 
-        if calib.parameters.eye_on_hand:
+        if calib.parameters.eye_in_hand:
             self.declare_parameter('robot_effector_frame')
             overriding_robot_effector_frame = self.get_parameter('robot_effector_frame').get_parameter_value().string_value
             if overriding_robot_effector_frame != "":

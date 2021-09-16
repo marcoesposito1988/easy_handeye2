@@ -1,2 +1,2 @@
-bool eye_on_hand
+bool eye_in_hand
 geometry_msgs/TransformStamped transform
