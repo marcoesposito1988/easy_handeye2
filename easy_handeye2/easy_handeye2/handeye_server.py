@@ -9,8 +9,8 @@ from std_msgs import msg
 from std_srvs import srv
 
 import easy_handeye2 as hec
-from easy_handeye2.handeye_calibration import HandeyeCalibration, HandeyeCalibrationParameters, \
-    HandeyeCalibrationParametersProvider
+from easy_handeye2.handeye_calibration import load_calibration, save_calibration, HandeyeCalibrationParametersProvider, \
+    filepath_for_calibration
 from easy_handeye2.handeye_calibration_backend_opencv import HandeyeCalibrationBackendOpenCV
 from easy_handeye2.handeye_sampler import HandeyeSampler
 
@@ -135,7 +135,7 @@ class HandeyeServer(rclpy.node.Node):
         bckname, algname = self.calibration_algorithm.split('/')
         backend = self.calibration_backends[bckname]
 
-        self.last_calibration = backend.compute_calibration(self.parameters, samples, algorithm=algname)
+        self.last_calibration = backend.compute_calibration(self, self.parameters, samples, algorithm=algname)
         if self.last_calibration is None:
             self.get_logger().warn('No valid calibration computed')
             response.valid = False
@@ -147,8 +147,8 @@ class HandeyeServer(rclpy.node.Node):
 
     def save_calibration(self, _, response: std_srvs.srv.Empty.Response):
         if self.last_calibration:
-            HandeyeCalibration.to_file(self.last_calibration)
-            self.get_logger().info('Calibration saved to {}'.format(self.last_calibration.filename()))
+            save_calibration(self.last_calibration)
+            self.get_logger().info('Calibration saved to {}'.format(filepath_for_calibration(self.last_calibration)))
         return response
 
     # TODO: evaluation

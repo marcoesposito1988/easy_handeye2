@@ -63,20 +63,20 @@ class HandeyeCalibrationBackendOpenCV(object):
 
         node.get_logger().info('OpenCV backend calibrating with algorithm {}'.format(algorithm))
 
-        if len(samples) < HandeyeCalibrationBackendOpenCV.MIN_SAMPLES:
+        if len(samples.samples) < HandeyeCalibrationBackendOpenCV.MIN_SAMPLES:
             node.get_logger().warn("{} more samples needed! Not computing the calibration".format(
-                HandeyeCalibrationBackendOpenCV.MIN_SAMPLES - len(samples)))
+                HandeyeCalibrationBackendOpenCV.MIN_SAMPLES - len(samples.samples)))
             return
 
         # Update data
-        opencv_samples = HandeyeCalibrationBackendOpenCV._get_opencv_samples(samples)
+        opencv_samples = HandeyeCalibrationBackendOpenCV._get_opencv_samples(samples.samples)
         (hand_world_rot, hand_world_tr), (marker_camera_rot, marker_camera_tr) = opencv_samples
 
         if len(hand_world_rot) != len(marker_camera_rot):
             node.get_logger().err("Different numbers of hand-world and camera-marker samples!")
             raise AssertionError
 
-        node.get_logger().info("Computing from %g poses..." % len(samples))
+        node.get_logger().info("Computing from %g poses..." % len(samples.samples))
 
         method = HandeyeCalibrationBackendOpenCV.AVAILABLE_ALGORITHMS[algorithm]
 
