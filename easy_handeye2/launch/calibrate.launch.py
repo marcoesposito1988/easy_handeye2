@@ -39,5 +39,5 @@ def generate_launch_description():
         arg_robot_effector_frame,
         node_dummy_calib_eih,
         node_dummy_calib_eob,
-        handeye_server,
+        # handeye_server,
     ])

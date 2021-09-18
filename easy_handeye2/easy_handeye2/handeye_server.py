@@ -39,6 +39,10 @@ class HandeyeServer(rclpy.node.Node):
         self.take_sample_service = self.create_service(ehm.srv.TakeSample, hec.TAKE_SAMPLE_TOPIC, self.take_sample)
         self.remove_sample_service = self.create_service(ehm.srv.RemoveSample, hec.REMOVE_SAMPLE_TOPIC,
                                                          self.remove_sample)
+        self.save_samples_service = self.create_service(ehm.srv.SaveSamples, hec.SAVE_SAMPLES_TOPIC,
+                                                        self.save_samples)
+        self.load_samples_service = self.create_service(ehm.srv.LoadSamples, hec.LOAD_SAMPLES_TOPIC,
+                                                        self.load_samples)
         self.compute_calibration_service = self.create_service(ehm.srv.ComputeCalibration,
                                                                hec.COMPUTE_CALIBRATION_TOPIC, self.compute_calibration)
         self.save_calibration_service = self.create_service(std_srvs.srv.Empty, hec.SAVE_CALIBRATION_TOPIC,
@@ -83,11 +87,7 @@ class HandeyeServer(rclpy.node.Node):
     # sampling
 
     def _retrieve_sample_list(self):
-        ret = ehm.msg.SampleList()
-        for s in self.sampler.get_samples():
-            ret.camera_marker_samples.append(s['optical'].transform)
-            ret.hand_world_samples.append(s['robot'].transform)
-        return ret
+        return self.sampler.get_samples()
 
     def get_sample_lists(self, _, response: ehm.srv.TakeSample.Response):
         response.samples = self._retrieve_sample_list()
@@ -109,6 +109,22 @@ class HandeyeServer(rclpy.node.Node):
         except IndexError:
             self.get_logger().err('Invalid index ' + req.sample_index)
         response.samples = self._retrieve_sample_list()
+        return response
+
+    def save_samples(self, _: ehm.srv.SaveSamples.Request, response: ehm.srv.SaveSamples.Response):
+        try:
+            response.success = self.sampler.save_samples()
+        except Exception as e:
+            self.get_logger().error(e)
+            response.success = False
+        return response
+
+    def load_samples(self, _: ehm.srv.LoadSamples.Request, response: ehm.srv.LoadSamples.Response):
+        try:
+            response.success = self.sampler.load_samples()
+            response.samples = self._retrieve_sample_list()
+        except IndexError:
+            response.success = False
         return response
 
     # calibration

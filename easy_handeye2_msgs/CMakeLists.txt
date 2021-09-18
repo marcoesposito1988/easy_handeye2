@@ -8,6 +8,7 @@ find_package(geometry_msgs REQUIRED)
 
 rosidl_generate_interfaces(${PROJECT_NAME}
         msg/HandeyeCalibration.msg
+        msg/Sample.msg
         msg/SampleList.msg
         msg/TargetPoseList.msg
         srv/calibration/ListAlgorithms.srv
@@ -15,6 +16,8 @@ rosidl_generate_interfaces(${PROJECT_NAME}
         srv/calibration/ComputeCalibration.srv
         srv/calibration/RemoveSample.srv
         srv/calibration/TakeSample.srv
+        srv/calibration/SaveSamples.srv
+        srv/calibration/LoadSamples.srv
         srv/robot_movements/CheckStartingPose.srv
         srv/robot_movements/EnumerateTargetPoses.srv
         srv/robot_movements/SelectTargetPose.srv

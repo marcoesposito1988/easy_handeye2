@@ -1,5 +1,6 @@
 import os
 
+from . import CALIBRATIONS_DIRECTORY
 import rclpy
 from rclpy.node import Node
 import yaml
@@ -50,8 +51,6 @@ class HandeyeCalibration(object):
     """
     Stores parameters and transformation of a hand-eye calibration for publishing.
     """
-    DIRECTORY = os.path.expanduser('~/.ros2/easy_handeye')
-    """Default directory for calibration yaml files."""
 
     # TODO: use the HandeyeCalibration message instead, this should be HandeyeCalibrationConversions
     def __init__(self,
@@ -148,13 +147,11 @@ class HandeyeCalibration(object):
         return HandeyeCalibration.from_dict(yaml.safe_load(in_yaml))
 
     def filename(self):
-        raise ValueError('TODO')
-        return HandeyeCalibration.filename_for_namespace(self.parameters.name)
+        return HandeyeCalibration.filename_for_name(self.parameters.name)
 
     @staticmethod
-    def filename_for_namespace(name):
-        raise ValueError('TODO')
-        return HandeyeCalibration.DIRECTORY + '/' + namespace.rstrip('/').split('/')[-1] + '.yaml'
+    def filename_for_name(name):
+        return CALIBRATIONS_DIRECTORY / (name + '.yaml')
 
     @staticmethod
     def to_file(calibration):
@@ -165,14 +162,14 @@ class HandeyeCalibration(object):
 
         :rtype: None
         """
-        if not os.path.exists(HandeyeCalibration.DIRECTORY):
-            os.makedirs(HandeyeCalibration.DIRECTORY)
+        if not os.path.exists(CALIBRATIONS_DIRECTORY):
+            os.makedirs(CALIBRATIONS_DIRECTORY)
 
         with open(calibration.filename(), 'w') as calib_file:
             calib_file.write(HandeyeCalibration.to_yaml(calibration))
 
     @staticmethod
-    def from_file(namespace):
+    def from_file(name):
         """
         Parses a yaml file in the default path and sets the contained values in this calibration.
 
@@ -181,7 +178,7 @@ class HandeyeCalibration(object):
         :rtype: HandeyeCalibration
         """
 
-        with open(HandeyeCalibration.filename_for_namespace(namespace)) as calib_file:
+        with open(HandeyeCalibration.filename_for_name(name)) as calib_file:
             return HandeyeCalibration.from_yaml(calib_file.read())
 
     @staticmethod

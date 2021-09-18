@@ -1,2 +1,1 @@
-geometry_msgs/Transform[] hand_world_samples
-geometry_msgs/Transform[] camera_marker_samples
+easy_handeye2_msgs/Sample[] samples
