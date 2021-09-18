@@ -125,8 +125,12 @@ class HandeyeSampler:
         """
         return self.samples
 
+    @staticmethod
+    def _filepath_for_samplelist(name):
+        return SAMPLES_DIRECTORY / f'{name}.samples'
+
     def load_samples(self) -> bool:
-        filepath = SAMPLES_DIRECTORY / self.handeye_parameters.name
+        filepath = HandeyeSampler._filepath_for_samplelist(self.handeye_parameters.name)
         with open(filepath) as f:
             m = yaml.load(f.read())
             ret = SampleList()
@@ -137,7 +141,7 @@ class HandeyeSampler:
     def save_samples(self) -> bool:
         if not os.path.exists(SAMPLES_DIRECTORY):
             os.makedirs(SAMPLES_DIRECTORY)
-        filepath = SAMPLES_DIRECTORY / self.handeye_parameters.name
+        filepath = HandeyeSampler._filepath_for_samplelist(self.handeye_parameters.name)
         with open(filepath, 'w') as f:
             f.write(message_to_yaml(self.samples))
         return True

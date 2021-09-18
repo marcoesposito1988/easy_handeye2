@@ -1,2 +1,2 @@
-bool eye_in_hand
+easy_handeye2_msgs/HandeyeCalibrationParameters parameters
 geometry_msgs/TransformStamped transform

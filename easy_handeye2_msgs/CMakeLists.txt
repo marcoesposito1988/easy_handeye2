@@ -8,6 +8,7 @@ find_package(geometry_msgs REQUIRED)
 
 rosidl_generate_interfaces(${PROJECT_NAME}
         msg/HandeyeCalibration.msg
+        msg/HandeyeCalibrationParameters.msg
         msg/Sample.msg
         msg/SampleList.msg
         msg/TargetPoseList.msg
