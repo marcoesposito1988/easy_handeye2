@@ -141,8 +141,7 @@ class HandeyeServer(rclpy.node.Node):
             response.valid = False
             return response
         response.valid = True
-        response.calibration.eye_in_hand = self.last_calibration.parameters.eye_in_hand
-        response.calibration.transform = self.last_calibration.transformation
+        response.calibration = self.last_calibration
         return response
 
     def save_calibration(self, _, response: std_srvs.srv.Empty.Response):

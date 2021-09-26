@@ -1,2 +1,2 @@
 easy_handeye2_msgs/HandeyeCalibrationParameters parameters
-geometry_msgs/TransformStamped transform
+geometry_msgs/Transform transform

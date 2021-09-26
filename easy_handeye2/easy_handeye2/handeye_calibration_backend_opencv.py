@@ -40,12 +40,12 @@ class HandeyeCalibrationBackendOpenCV(object):
         marker_camera_tr = []
 
         for s in samples:
-            camera_marker_msg = s['optical'].transform
+            camera_marker_msg = s.tracking
             (mcr, mct) = HandeyeCalibrationBackendOpenCV._msg_to_opencv(camera_marker_msg)
             marker_camera_rot.append(mcr)
             marker_camera_tr.append(mct)
 
-            base_hand_msg = s['robot'].transform
+            base_hand_msg = s.robot
             (hbr, hbt) = HandeyeCalibrationBackendOpenCV._msg_to_opencv(base_hand_msg)
             hand_base_rot.append(hbr)
             hand_base_tr.append(hbt)
@@ -91,7 +91,6 @@ class HandeyeCalibrationBackendOpenCV(object):
         result = Transform(translation=Vector3(x=hctx, y=hcty, z=hctz),
                            rotation=Quaternion(x=hcqx, y=hcqy, z=hcqz, w=hcqw))
 
-        ret = HandeyeCalibration(calibration_parameters=handeye_parameters,
-                                 transformation=result)
+        ret = HandeyeCalibration(parameters=handeye_parameters, transform=result)
 
         return ret
