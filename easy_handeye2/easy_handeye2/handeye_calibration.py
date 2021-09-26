@@ -1,6 +1,5 @@
 import os
 import pathlib
-from typing import Optional
 
 import yaml
 from easy_handeye2_msgs.msg import HandeyeCalibration, HandeyeCalibrationParameters
@@ -48,13 +47,10 @@ def load_calibration(name) -> HandeyeCalibration:
     return ret
 
 
-def save_calibration(calibration: HandeyeCalibration) -> Optional[pathlib.Path]:
-    try:
-        if not os.path.exists(CALIBRATIONS_DIRECTORY):
-            os.makedirs(CALIBRATIONS_DIRECTORY)
-        filepath = filepath_for_calibration(calibration.parameters.name)
-        with open(filepath, 'w') as f:
-            f.write(message_to_yaml(calibration))
-        return filepath
-    except:
-        return None
+def save_calibration(calibration: HandeyeCalibration) -> pathlib.Path:
+    if not os.path.exists(CALIBRATIONS_DIRECTORY):
+        os.makedirs(CALIBRATIONS_DIRECTORY)
+    filepath = filepath_for_calibration(calibration.parameters.name)
+    with open(filepath, 'w') as f:
+        f.write(message_to_yaml(calibration))
+    return filepath

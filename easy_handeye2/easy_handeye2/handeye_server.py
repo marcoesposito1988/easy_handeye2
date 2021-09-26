@@ -1,16 +1,13 @@
 import itertools
 
-import easy_handeye2_msgs as ehm
 import rclpy
 import std_msgs
-import std_srvs
+import easy_handeye2_msgs as ehm
 from easy_handeye2_msgs import msg, srv
 from std_msgs import msg
-from std_srvs import srv
 
 import easy_handeye2 as hec
-from easy_handeye2.handeye_calibration import load_calibration, save_calibration, HandeyeCalibrationParametersProvider, \
-    filepath_for_calibration
+from easy_handeye2.handeye_calibration import save_calibration, HandeyeCalibrationParametersProvider
 from easy_handeye2.handeye_calibration_backend_opencv import HandeyeCalibrationBackendOpenCV
 from easy_handeye2.handeye_sampler import HandeyeSampler
 
@@ -25,6 +22,8 @@ class HandeyeServer(rclpy.node.Node):
         self.get_logger().info(f'Read parameters for calibration "{self.parameters.name}"')
 
         self.sampler = HandeyeSampler(self, handeye_parameters=self.parameters)
+        self.sampler.wait_for_tf_init()
+
         self.calibration_backends = {'OpenCV': HandeyeCalibrationBackendOpenCV()}
         self.calibration_algorithm = 'OpenCV/Tsai-Lenz'
 
@@ -145,15 +144,16 @@ class HandeyeServer(rclpy.node.Node):
         return response
 
     def save_calibration(self, _, response: ehm.srv.SaveCalibration.Response):
+        response.success = False
         if self.last_calibration:
-            filepath = save_calibration(self.last_calibration)
-            if filepath is not None:
+            try:
+                filepath = save_calibration(self.last_calibration)
                 self.get_logger().info(f'Calibration saved to {filepath}')
                 response.success = True
                 response.filepath.data = str(filepath)
-            else:
+            except Exception as e:
                 self.get_logger().error(f'Could not save calibration')
-                response.success = False
+                self.get_logger().error(f'Underlying exception: {e}')
         return response
 
     # TODO: evaluation
