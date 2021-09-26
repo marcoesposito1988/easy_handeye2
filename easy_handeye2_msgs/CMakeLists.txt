@@ -15,6 +15,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
         srv/calibration/ListAlgorithms.srv
         srv/calibration/SetAlgorithm.srv
         srv/calibration/ComputeCalibration.srv
+        srv/calibration/SaveCalibration.srv
         srv/calibration/RemoveSample.srv
         srv/calibration/TakeSample.srv
         srv/calibration/SaveSamples.srv

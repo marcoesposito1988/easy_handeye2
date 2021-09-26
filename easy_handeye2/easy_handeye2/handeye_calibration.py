@@ -1,4 +1,7 @@
 import os
+import pathlib
+from typing import Optional
+
 import yaml
 from easy_handeye2_msgs.msg import HandeyeCalibration, HandeyeCalibrationParameters
 from rclpy.node import Node
@@ -7,7 +10,7 @@ from rosidl_runtime_py import set_message_fields, message_to_yaml
 from . import CALIBRATIONS_DIRECTORY
 
 
-def filepath_for_calibration(name):
+def filepath_for_calibration(name) -> pathlib.Path:
     return CALIBRATIONS_DIRECTORY / f'{name}.calib'
 
 
@@ -36,7 +39,7 @@ class HandeyeCalibrationParametersProvider:
         return ret
 
 
-def load_calibration(name):
+def load_calibration(name) -> HandeyeCalibration:
     filepath = filepath_for_calibration(name)
     with open(filepath) as f:
         m = yaml.load(f.read())
@@ -45,10 +48,13 @@ def load_calibration(name):
     return ret
 
 
-def save_calibration(calibration: HandeyeCalibration) -> bool:
-    if not os.path.exists(CALIBRATIONS_DIRECTORY):
-        os.makedirs(CALIBRATIONS_DIRECTORY)
-    filepath = filepath_for_calibration(calibration.parameters.name)
-    with open(filepath, 'w') as f:
-        f.write(message_to_yaml(calibration))
-    return True
+def save_calibration(calibration: HandeyeCalibration) -> Optional[pathlib.Path]:
+    try:
+        if not os.path.exists(CALIBRATIONS_DIRECTORY):
+            os.makedirs(CALIBRATIONS_DIRECTORY)
+        filepath = filepath_for_calibration(calibration.parameters.name)
+        with open(filepath, 'w') as f:
+            f.write(message_to_yaml(calibration))
+        return filepath
+    except:
+        return None

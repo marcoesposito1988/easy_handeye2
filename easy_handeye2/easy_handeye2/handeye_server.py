@@ -45,7 +45,7 @@ class HandeyeServer(rclpy.node.Node):
                                                         self.load_samples)
         self.compute_calibration_service = self.create_service(ehm.srv.ComputeCalibration,
                                                                hec.COMPUTE_CALIBRATION_TOPIC, self.compute_calibration)
-        self.save_calibration_service = self.create_service(std_srvs.srv.Empty, hec.SAVE_CALIBRATION_TOPIC,
+        self.save_calibration_service = self.create_service(ehm.srv.SaveCalibration, hec.SAVE_CALIBRATION_TOPIC,
                                                             self.save_calibration)
 
         # Useful for secondary input sources (e.g. programmable buttons on robot)
@@ -144,10 +144,16 @@ class HandeyeServer(rclpy.node.Node):
         response.calibration = self.last_calibration
         return response
 
-    def save_calibration(self, _, response: std_srvs.srv.Empty.Response):
+    def save_calibration(self, _, response: ehm.srv.SaveCalibration.Response):
         if self.last_calibration:
-            save_calibration(self.last_calibration)
-            self.get_logger().info('Calibration saved to {}'.format(filepath_for_calibration(self.last_calibration)))
+            filepath = save_calibration(self.last_calibration)
+            if filepath is not None:
+                self.get_logger().info(f'Calibration saved to {filepath}')
+                response.success = True
+                response.filepath.data = str(filepath)
+            else:
+                self.get_logger().error(f'Could not save calibration')
+                response.success = False
         return response
 
     # TODO: evaluation
