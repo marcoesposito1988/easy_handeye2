@@ -12,19 +12,26 @@
     <author email="esposito@imfusion.com">Marco Esposito</author>
     <license>LGPLv3</license>
 
-    <buildtool_depend>ament_cmake</buildtool_depend>
+    <buildtool_depend>ament_python</buildtool_depend>
 
-    <exec_depend>rclpy</exec_depend>
     <exec_depend>geometry_msgs</exec_depend>
     <exec_depend>std_msgs</exec_depend>
     <exec_depend>std_srvs</exec_depend>
     <exec_depend>easy_handeye2_msgs</exec_depend>
     <exec_depend>message_runtime</exec_depend>
+
+    <exec_depend>rclpy</exec_depend>
     <exec_depend>tf2_ros</exec_depend>
+    <exec_depend>moveit_commander</exec_depend>
     <exec_depend>python-transforms3d-pip</exec_depend>
     <exec_depend>python3-opencv</exec_depend>
 
+    <exec_depend version_gte="0.2.19">python_qt_binding</exec_depend>
+    <exec_depend>rqt_gui</exec_depend>
+    <exec_depend>rqt_gui_py</exec_depend>
+
     <export>
+        <rqt_gui plugin="${prefix}/plugin.xml" />
         <build_type>ament_python</build_type>
     </export>
 </package>

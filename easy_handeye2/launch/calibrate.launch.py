@@ -14,12 +14,14 @@ def generate_launch_description():
     arg_robot_effector_frame = DeclareLaunchArgument('robot_effector_frame')
 
     node_dummy_calib_eih = Node(package='tf2_ros', executable='static_transform_publisher', name='dummy_publisher',
-                            condition=IfCondition(LaunchConfiguration('eye_in_hand')),
-                            arguments=f'0 0 0.1 0 0 0 1'.split(' ') + [LaunchConfiguration('robot_effector_frame'), LaunchConfiguration('tracking_base_frame')])
+                                condition=IfCondition(LaunchConfiguration('eye_in_hand')),
+                                arguments=f'0 0 0.1 0 0 0 1'.split(' ') + [LaunchConfiguration('robot_effector_frame'),
+                                                                           LaunchConfiguration('tracking_base_frame')])
 
     node_dummy_calib_eob = Node(package='tf2_ros', executable='static_transform_publisher', name='dummy_publisher',
-                            condition=UnlessCondition(LaunchConfiguration('eye_in_hand')),
-                            arguments=f'1 0 0 0 0 0 1'.split(' ') + [LaunchConfiguration('robot_base_frame'), LaunchConfiguration('tracking_base_frame')])
+                                condition=UnlessCondition(LaunchConfiguration('eye_in_hand')),
+                                arguments=f'1 0 0 0 0 0 1'.split(' ') + [LaunchConfiguration('robot_base_frame'),
+                                                                         LaunchConfiguration('tracking_base_frame')])
 
     handeye_server = Node(package='easy_handeye2', executable='handeye_server', name='handeye_server', parameters=[{
         'name': LaunchConfiguration('name'),
@@ -29,6 +31,18 @@ def generate_launch_description():
         'robot_base_frame': LaunchConfiguration('robot_base_frame'),
         'robot_effector_frame': LaunchConfiguration('robot_effector_frame'),
     }])
+
+    handeye_rqt_calibrator = Node(package='easy_handeye2', executable='rqt_calibrator.py',
+                                  name='handeye_rqt_calibrator',
+                                  # arguments=['--ros-args', '--log-level', 'debug'],
+                                  parameters=[{
+            'name': LaunchConfiguration('name'),
+            'eye_in_hand': LaunchConfiguration('eye_in_hand'),
+            'tracking_base_frame': LaunchConfiguration('tracking_base_frame'),
+            'tracking_marker_frame': LaunchConfiguration('tracking_marker_frame'),
+            'robot_base_frame': LaunchConfiguration('robot_base_frame'),
+            'robot_effector_frame': LaunchConfiguration('robot_effector_frame'),
+        }])
 
     return LaunchDescription([
         arg_name,
@@ -40,4 +54,5 @@ def generate_launch_description():
         node_dummy_calib_eih,
         node_dummy_calib_eob,
         handeye_server,
+        handeye_rqt_calibrator,
     ])

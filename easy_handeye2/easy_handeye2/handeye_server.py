@@ -164,7 +164,10 @@ def main(args=None):
 
     handeye_server = HandeyeServer()
 
-    rclpy.spin(handeye_server)
+    try:
+        rclpy.spin(handeye_server)
+    except KeyboardInterrupt:
+        pass
 
     handeye_server.destroy_node()
     rclpy.shutdown()
