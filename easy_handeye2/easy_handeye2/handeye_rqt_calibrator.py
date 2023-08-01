@@ -17,7 +17,7 @@ class RqtHandeyeCalibrator(Plugin):
         return self.mainwidget
 
     def shutdown_plugin(self):
-        self.mainwidget.shutdown()
+        pass
 
     def save_settings(self, plugin_settings, instance_settings):
         self.mainwidget.save_settings(plugin_settings, instance_settings)

@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 
 import rclpy
+from rclpy.executors import ExternalShutdownException
+from rclpy.node import ParameterType, ParameterDescriptor
 import tf2_ros
 import geometry_msgs.msg
 from easy_handeye2.handeye_calibration import load_calibration
@@ -10,7 +12,7 @@ class HandeyePublisher(rclpy.node.Node):
     def __init__(self):
         super().__init__('handeye_publisher')
 
-        self.declare_parameter('name')
+        self.declare_parameter('name', descriptor=ParameterDescriptor(type=ParameterType.PARAMETER_STRING))
         name = self.get_parameter('name').get_parameter_value().string_value
 
         self.get_logger().info(f'Loading the calibration with name {name}')
@@ -41,10 +43,12 @@ def main(args=None):
 
     handeye_publisher = HandeyePublisher()
 
-    rclpy.spin(handeye_publisher)
-
-    handeye_publisher.destroy_node()
-    rclpy.shutdown()
+    try:
+        rclpy.spin(handeye_publisher)
+    except (KeyboardInterrupt, ExternalShutdownException):
+        pass
+    finally:
+        handeye_publisher.destroy_node()
 
 
 if __name__ == '__main__':

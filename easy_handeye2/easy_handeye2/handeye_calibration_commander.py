@@ -2,6 +2,7 @@
 
 import rclpy
 from easy_handeye2.handeye_client import HandeyeClient
+from rclpy.executors import ExternalShutdownException
 
 
 # for reading single character without hitting RETURN (unless it's ipython!)
@@ -86,11 +87,10 @@ def main(args=None):
         while True:
             rclpy.spin(handeye_calibration_commander)
             handeye_calibration_commander.interactive_menu()
-    except KeyboardInterrupt:
+    except (KeyboardInterrupt, ExternalShutdownException):
         pass
-
-    handeye_calibration_commander.destroy_node()
-    rclpy.shutdown()
+    finally:
+        handeye_calibration_commander.destroy_node()
 
 
 if __name__ == '__main__':

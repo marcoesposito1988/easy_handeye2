@@ -1,6 +1,7 @@
 import math
 
 import rclpy
+from rclpy.executors import ExternalShutdownException
 import easy_handeye2_msgs as ehm
 from easy_handeye2_msgs import msg, srv
 
@@ -73,10 +74,12 @@ def main(args=None):
 
     handeye_server_robot = HandeyeServerRobot()
 
-    rclpy.spin(handeye_server_robot)
-
-    handeye_server_robot.destroy_node()
-    rclpy.shutdown()
+    try:
+        rclpy.spin(handeye_server_robot)
+    except (KeyboardInterrupt, ExternalShutdownException):
+        pass
+    finally:
+        handeye_server_robot.destroy_node()
 
 
 if __name__ == '__main__':
