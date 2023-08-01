@@ -90,16 +90,14 @@ class RqtHandeyeCalibratorWidget(QWidget):
 
         self._widget.takeButton.clicked[bool].connect(self.handle_take_sample)
         self._widget.removeButton.clicked[bool].connect(self.handle_remove_sample)
-        self._widget.computeButton.clicked[bool].connect(self.handle_compute_calibration)
         self._widget.saveButton.clicked[bool].connect(self.handle_save_calibration)
+        self._calibration_algorithm_combobox.currentIndexChanged.connect(self.handle_compute_calibration)
 
         self._widget.removeButton.setEnabled(False)
-        self._widget.computeButton.setEnabled(False)
         self._widget.saveButton.setEnabled(False)
 
         sample_list = self.client.get_sample_list()
         self._display_sample_list(sample_list)
-        self._widget.computeButton.setEnabled(len(sample_list.samples) > 1)
 
     def shutdown_plugin(self):
         # TODO unregister all publishers here
@@ -135,27 +133,29 @@ class RqtHandeyeCalibratorWidget(QWidget):
     def handle_take_sample(self):
         sample_list = self.client.take_sample()
         self._display_sample_list(sample_list)
-        self._widget.computeButton.setEnabled(len(sample_list.samples) > 1)
         self._widget.saveButton.setEnabled(False)
+        self.handle_compute_calibration()
 
     def handle_remove_sample(self):
         index = self._widget.sampleListWidget.currentRow()
         sample_list = self.client.remove_sample(index)
         self._display_sample_list(sample_list)
-        self._widget.computeButton.setEnabled(len(sample_list.samples) > 1)
         self._widget.saveButton.setEnabled(False)
 
     def handle_compute_calibration(self):
-        result = self.client.compute_calibration()
-        self._widget.computeButton.setEnabled(False)
-        if result.valid:
-            tr = result.calibration.transform.translation
-            qt = result.calibration.transform.rotation
-            t = f'Translation\n\tx: {tr.x:.6f}\n\ty: {tr.y:.6f}\n\tz: {tr.z:.6f})\nRotation\n\tx: {qt.x:.6f}\n\ty: {qt.y:.6f}\n\tz: {qt.z:.6f}\n\tw: {qt.w:.6f}'
-            self._widget.outputBox.setPlainText(t)
-            self._widget.saveButton.setEnabled(True)
+        if len(self.client.get_sample_list().samples) > 2:
+            result = self.client.compute_calibration()
+            if result.valid:
+                tr = result.calibration.transform.translation
+                qt = result.calibration.transform.rotation
+                t = f'Translation\n\tx: {tr.x:.6f}\n\ty: {tr.y:.6f}\n\tz: {tr.z:.6f})\nRotation\n\tx: {qt.x:.6f}\n\ty: {qt.y:.6f}\n\tz: {qt.z:.6f}\n\tw: {qt.w:.6f}'
+                self._widget.outputBox.setPlainText(t)
+                self._widget.saveButton.setEnabled(True)
+            else:
+                self._widget.outputBox.setPlainText('The calibration could not be computed')
+                self._widget.saveButton.setEnabled(False)
         else:
-            self._widget.outputBox.setPlainText('The calibration could not be computed')
+            self._widget.outputBox.setPlainText('Too few samples, the calibration cannot not be computed')
             self._widget.saveButton.setEnabled(False)
 
     def handle_save_calibration(self):
