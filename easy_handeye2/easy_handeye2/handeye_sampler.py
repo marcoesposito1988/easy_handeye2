@@ -147,7 +147,7 @@ class HandeyeSampler:
     def load_samples(self) -> bool:
         filepath = HandeyeSampler._filepath_for_samplelist(self.handeye_parameters.name)
         with open(filepath) as f:
-            m = yaml.load(f.read())
+            m = yaml.full_load(f.read())
             ret = SampleList()
             set_message_fields(ret, m)
             self.samples = ret

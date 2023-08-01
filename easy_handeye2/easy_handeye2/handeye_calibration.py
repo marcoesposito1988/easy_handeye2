@@ -41,7 +41,7 @@ class HandeyeCalibrationParametersProvider:
 def load_calibration(name) -> HandeyeCalibration:
     filepath = filepath_for_calibration(name)
     with open(filepath) as f:
-        m = yaml.load(f.read())
+        m = yaml.full_load(f.read())
     ret = HandeyeCalibration()
     set_message_fields(ret, m)
     return ret
