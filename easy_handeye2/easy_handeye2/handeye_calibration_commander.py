@@ -26,7 +26,7 @@ class HandeyeCalibrationCommander(rclpy.node.Node):
 
         self.client = HandeyeClient(self)
 
-        if self.client.parameters.eye_in_hand:
+        if self.client.parameters.calibration_type == 'eye_in_hand':
             print('eye-on-hand calibration')
             print('robot effector frame: {}'.format(self.client.parameters.robot_effector_frame))
         else:

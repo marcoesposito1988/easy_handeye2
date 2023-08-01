@@ -18,7 +18,7 @@ class HandeyePublisher(rclpy.node.Node):
         self.calibration = load_calibration(name)
         parameters = self.calibration.parameters
 
-        if parameters.eye_in_hand:
+        if parameters.calibration_type == 'eye_in_hand':
             orig = parameters.robot_effector_frame
         else:
             orig = parameters.robot_base_frame

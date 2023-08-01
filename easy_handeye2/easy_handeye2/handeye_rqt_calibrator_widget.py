@@ -83,7 +83,7 @@ class RqtHandeyeCalibratorWidget(QWidget):
         self._infoWidget.trackingMarkerFrameLineEdit.setText(self.parameters.tracking_marker_frame)
         self._infoWidget.robotBaseFrameLineEdit.setText(self.parameters.robot_base_frame)
         self._infoWidget.robotEffectorFrameLineEdit.setText(self.parameters.robot_effector_frame)
-        if self.parameters.eye_in_hand:
+        if self.parameters.calibration_type == 'eye_in_hand':
             self._infoWidget.calibTypeLineEdit.setText("eye in hand")
         else:
             self._infoWidget.calibTypeLineEdit.setText("eye on base")

@@ -1,5 +1,5 @@
 string name
-bool eye_in_hand
+string calibration_type
 string robot_base_frame
 string robot_effector_frame
 string tracking_base_frame

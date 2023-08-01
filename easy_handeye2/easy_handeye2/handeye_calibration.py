@@ -3,7 +3,7 @@ import pathlib
 
 import yaml
 from easy_handeye2_msgs.msg import HandeyeCalibration, HandeyeCalibrationParameters
-from rclpy.node import Node
+from rclpy.node import Node, ParameterDescriptor, ParameterType
 from rosidl_runtime_py import set_message_fields, message_to_yaml
 
 from . import CALIBRATIONS_DIRECTORY
@@ -17,18 +17,18 @@ class HandeyeCalibrationParametersProvider:
     def __init__(self, node: Node):
         self.node = node
         # declare and read parameters
-        self.node.declare_parameter('name')
-        self.node.declare_parameter('eye_in_hand')
-        self.node.declare_parameter('robot_base_frame')
-        self.node.declare_parameter('robot_effector_frame')
-        self.node.declare_parameter('tracking_base_frame')
-        self.node.declare_parameter('tracking_marker_frame')
-        self.node.declare_parameter('freehand_robot_movement')
+        self.node.declare_parameter('name', descriptor=ParameterDescriptor(type=ParameterType.PARAMETER_STRING))
+        self.node.declare_parameter('calibration_type', descriptor=ParameterDescriptor(type=ParameterType.PARAMETER_STRING))
+        self.node.declare_parameter('robot_base_frame', descriptor=ParameterDescriptor(type=ParameterType.PARAMETER_STRING))
+        self.node.declare_parameter('robot_effector_frame', descriptor=ParameterDescriptor(type=ParameterType.PARAMETER_STRING))
+        self.node.declare_parameter('tracking_base_frame', descriptor=ParameterDescriptor(type=ParameterType.PARAMETER_STRING))
+        self.node.declare_parameter('tracking_marker_frame', descriptor=ParameterDescriptor(type=ParameterType.PARAMETER_STRING))
+        self.node.declare_parameter('freehand_robot_movement', True)
 
     def read(self):
         ret = HandeyeCalibrationParameters(
             name=self.node.get_parameter('name').get_parameter_value().string_value,
-            eye_in_hand=self.node.get_parameter('eye_in_hand').get_parameter_value().bool_value,
+            calibration_type=self.node.get_parameter('calibration_type').get_parameter_value().string_value,
             robot_base_frame=self.node.get_parameter('robot_base_frame').get_parameter_value().string_value,
             robot_effector_frame=self.node.get_parameter('robot_effector_frame').get_parameter_value().string_value,
             tracking_base_frame=self.node.get_parameter('tracking_base_frame').get_parameter_value().string_value,
