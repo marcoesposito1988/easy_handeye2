@@ -49,16 +49,32 @@
        </widget>
       </item>
       <item row="1" column="1">
-       <widget class="QLineEdit" name="calibNameLineEdit"/>
+       <widget class="QLineEdit" name="calibNameLineEdit">
+        <property name="readOnly">
+         <bool>true</bool>
+        </property>
+       </widget>
       </item>
       <item row="3" column="1">
-       <widget class="QLineEdit" name="calibTypeLineEdit"/>
+       <widget class="QLineEdit" name="calibTypeLineEdit">
+        <property name="readOnly">
+         <bool>true</bool>
+        </property>
+       </widget>
       </item>
       <item row="5" column="1">
-       <widget class="QLineEdit" name="trackingBaseFrameLineEdit"/>
+       <widget class="QLineEdit" name="trackingBaseFrameLineEdit">
+        <property name="readOnly">
+         <bool>true</bool>
+        </property>
+       </widget>
       </item>
       <item row="7" column="1">
-       <widget class="QLineEdit" name="trackingMarkerFrameLineEdit"/>
+       <widget class="QLineEdit" name="trackingMarkerFrameLineEdit">
+        <property name="readOnly">
+         <bool>true</bool>
+        </property>
+       </widget>
       </item>
       <item row="8" column="0">
        <widget class="QLabel" name="robotFrameLabel_3">
@@ -68,7 +84,11 @@
        </widget>
       </item>
       <item row="8" column="1">
-       <widget class="QLineEdit" name="robotBaseFrameLineEdit"/>
+       <widget class="QLineEdit" name="robotBaseFrameLineEdit">
+        <property name="readOnly">
+         <bool>true</bool>
+        </property>
+       </widget>
       </item>
       <item row="9" column="0">
        <widget class="QLabel" name="robotFrameLabel">
@@ -78,7 +98,11 @@
        </widget>
       </item>
       <item row="9" column="1">
-       <widget class="QLineEdit" name="robotEffectorFrameLineEdit"/>
+       <widget class="QLineEdit" name="robotEffectorFrameLineEdit">
+        <property name="readOnly">
+         <bool>true</bool>
+        </property>
+       </widget>
       </item>
      </layout>
     </widget>

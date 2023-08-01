@@ -51,12 +51,6 @@ class RqtHandeyeCalibratorWidget(QWidget):
         loadUi(str(ui_info_file.resolve()), self._infoWidget)
         self._widget.horizontalLayout_infoAndActions.insertWidget(0, self._infoWidget)
 
-        self._calibration_algorithm_combobox = QComboBox()
-        self._calibration_algorithm_layout = QHBoxLayout()
-        self._calibration_algorithm_layout.insertWidget(0, QLabel('Calibration algorithm: '))
-        self._calibration_algorithm_layout.insertWidget(1, self._calibration_algorithm_combobox)
-        self._infoWidget.layout().insertLayout(-1, self._calibration_algorithm_layout)
-
         # Give QObjects reasonable names
         self._widget.setObjectName('RqtHandeyeCalibrationUI')
         # Show _widget.windowTitle on left-top of each plugin (when
@@ -73,10 +67,10 @@ class RqtHandeyeCalibratorWidget(QWidget):
 
         resp = self.client.list_algorithms()
         for i, a in enumerate(resp.algorithms):
-            self._calibration_algorithm_combobox.insertItem(i, a)
+            self._widget.calibAlgorithmComboBox.insertItem(i, a)
         index_of_curr_alg = resp.algorithms.index(resp.current_algorithm)
-        self._calibration_algorithm_combobox.setCurrentIndex(index_of_curr_alg)
-        self._calibration_algorithm_combobox.currentTextChanged.connect(self.client.set_algorithm)
+        self._widget.calibAlgorithmComboBox.setCurrentIndex(index_of_curr_alg)
+        self._widget.calibAlgorithmComboBox.currentTextChanged.connect(self.client.set_algorithm)
 
         self._infoWidget.calibNameLineEdit.setText(self.parameters.name)
         self._infoWidget.trackingBaseFrameLineEdit.setText(self.parameters.tracking_base_frame)
@@ -91,7 +85,7 @@ class RqtHandeyeCalibratorWidget(QWidget):
         self._widget.takeButton.clicked[bool].connect(self.handle_take_sample)
         self._widget.removeButton.clicked[bool].connect(self.handle_remove_sample)
         self._widget.saveButton.clicked[bool].connect(self.handle_save_calibration)
-        self._calibration_algorithm_combobox.currentIndexChanged.connect(self.handle_compute_calibration)
+        self._widget.calibAlgorithmComboBox.currentIndexChanged.connect(self.handle_compute_calibration)
 
         self._widget.removeButton.setEnabled(False)
         self._widget.saveButton.setEnabled(False)
