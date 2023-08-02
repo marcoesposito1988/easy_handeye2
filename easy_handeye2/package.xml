@@ -29,7 +29,8 @@
     <exec_depend>rqt_gui_py</exec_depend>
 
     <export>
-        <rqt_gui plugin="${prefix}/plugin.xml" />
+        <rqt_gui plugin="${prefix}/plugin_calibrator.xml" />
+        <rqt_gui plugin="${prefix}/plugin_evaluator.xml" />
         <build_type>ament_python</build_type>
     </export>
 </package>

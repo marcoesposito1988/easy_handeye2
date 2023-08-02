@@ -1,5 +1,5 @@
 <library path="src">
-    <class name="Moveit" type="easy_handeye2.handeye_rqt_calibrator.RqtHandeyeCalibrator"
+    <class name="RqtHandeyeCalibrator" type="easy_handeye2.handeye_rqt_calibrator.RqtHandeyeCalibrator"
            base_class_type="rqt_gui_py::Plugin">
         <description>
             GUI to perform a calibration with easy_handeye2.

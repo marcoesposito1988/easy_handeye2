@@ -1,0 +1,18 @@
+<library path="src">
+    <class name="RqtHandeyeEvaluator" type="easy_handeye2.handeye_rqt_evaluator.RqtHandeyeEvaluator"
+           base_class_type="rqt_gui_py::Plugin">
+        <description>
+            GUI to evaluate a calibration with easy_handeye2.
+        </description>
+        <qtgui>
+            <group>
+                <label>HandEye Evaluation</label>
+                <icon type="theme">folder</icon>
+                <statustip>Plugins related to easy_handeye2.</statustip>
+            </group>
+            <label>easy_handeye2 Evaluation tool</label>
+            <icon type="theme">accessories-text-editor</icon>
+            <statustip>GUI to monitor the position of the tracking marker as the robot moves to evaluate the calibration accuracy.</statustip>
+        </qtgui>
+    </class>
+</library>
