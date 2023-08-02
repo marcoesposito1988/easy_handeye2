@@ -1,19 +1,22 @@
-
+import math
 import pathlib
 
-import rclpy
+import numpy as np
+import transforms3d as tfs
 from ament_index_python import get_resource
 from easy_handeye2.handeye_calibration import HandeyeCalibrationParametersProvider
-from python_qt_binding import loadUi
 from easy_handeye2.handeye_client import HandeyeClient
-
-from python_qt_binding.QtWidgets import QWidget, QListWidgetItem, QLabel, QComboBox, QHBoxLayout
+from python_qt_binding import loadUi
+from python_qt_binding.QtCore import QTimer
+from python_qt_binding.QtWidgets import QWidget
 
 
 def format_sample(sample):
     x, y, z = sample.translation.x, sample.translation.y, sample.translation.z
     qx, qy, qz, qw = sample.rotation.x, sample.rotation.y, sample.rotation.z, sample.rotation.w
-    return 'translation: [{:+.2f}, {:+.2f}, {:+.2f}]\nrotation: [{:+.2f}, {:+.2f}, {:+.2f}, {:+.2f}]'.format(x, y, z, qx, qy, qz, qw)
+    return 'translation: [{:+.2f}, {:+.2f}, {:+.2f}]\nrotation: [{:+.2f}, {:+.2f}, {:+.2f}, {:+.2f}]'.format(x, y, z,
+                                                                                                             qx, qy, qz,
+                                                                                                             qw)
 
 
 class RqtHandeyeCalibratorWidget(QWidget):
@@ -25,6 +28,8 @@ class RqtHandeyeCalibratorWidget(QWidget):
         self._node = context.node
         self.parameters_provider = HandeyeCalibrationParametersProvider(self._node)
         self.parameters = self.parameters_provider.read()
+
+        self._current_transforms = None
 
         # Process standalone plugin command-line arguments
         from argparse import ArgumentParser
@@ -93,9 +98,12 @@ class RqtHandeyeCalibratorWidget(QWidget):
         sample_list = self.client.get_sample_list()
         self._display_sample_list(sample_list)
 
-    def shutdown_plugin(self):
-        # TODO unregister all publishers here
-        pass
+        self._update_ui_timer = QTimer(self)
+        self._update_ui_timer.timeout.connect(self._updateUI)
+        self._update_ui_timer.start(100)
+
+    def shutdown(self):
+        self._update_ui_timer.stop()
 
     def save_settings(self, plugin_settings, instance_settings):
         # TODO save intrinsic configuration, usually using:
@@ -123,6 +131,79 @@ class RqtHandeyeCalibratorWidget(QWidget):
                                                                            formatted_tracking_sample))
         self._widget.sampleListWidget.setCurrentRow(len(sample_list.samples) - 1)
         self._widget.removeButton.setEnabled(len(sample_list.samples) > 0)
+
+    @staticmethod
+    def _translation_distance(t1, t2):
+        cmt1 = t1.translation
+        tr1 = np.array((cmt1.x, cmt1.y, cmt1.z))
+        cmt2 = t2.translation
+        tr2 = np.array((cmt2.x, cmt2.y, cmt2.z))
+        return np.linalg.norm(tr1 - tr2)
+
+    @staticmethod
+    def _q_log(q):
+        # transform to a unit quaternion
+        u_q = np.array(q) / tfs.quaternions.qnorm(q)
+        unit_q = tfs.quaternions.fillpositive(np.array(u_q[1:4]))
+        log_result = np.zeros(3)
+        if not np.allclose(unit_q[1:4], np.zeros(3)):
+            log_result = np.arccos(unit_q[0]) * unit_q[1:4] / np.linalg.norm(unit_q[1:4])
+
+        return log_result
+
+    @staticmethod
+    def _q_distance(q1, q2):
+        u_q1 = np.array(q1) / tfs.quaternions.qnorm(q1)
+        u_q2 = np.array(q2) / tfs.quaternions.qnorm(q2)
+        q_1 = tfs.quaternions.fillpositive(np.array(u_q1[1:4]))
+        q_2 = tfs.quaternions.fillpositive(np.array(u_q2[1:4]))
+        delta_q = tfs.quaternions.qmult(q_1, tfs.quaternions.qconjugate(q_2))
+
+        log_q = RqtHandeyeCalibratorWidget._q_log(delta_q)
+
+        if not np.allclose(delta_q, np.array([-1, 0, 0, 0])):
+            d = 2 * np.linalg.norm(log_q)
+        else:
+            d = 2 * np.pi
+
+        return d
+
+    @staticmethod
+    def _rotation_distance(t1, t2):
+        cmq1 = t1.rotation
+        rot1 = (cmq1.w, cmq1.x, cmq1.y, cmq1.z)
+        cmq2 = t2.rotation
+        rot2 = (cmq2.w, cmq2.x, cmq2.y, cmq2.z)
+        return RqtHandeyeCalibratorWidget._q_distance(rot1, rot2)
+
+    @staticmethod
+    def _has_moved(t1, t2):
+        TRANSLATION_TOLERANCE_M = 0.003
+        ROTATION_TOLERANCE_RAD = math.radians(3)
+
+        translation_has_moved = RqtHandeyeCalibratorWidget._translation_distance(t1, t2) > TRANSLATION_TOLERANCE_M
+        rotation_has_moved = RqtHandeyeCalibratorWidget._rotation_distance(t1, t2) > ROTATION_TOLERANCE_RAD
+        return translation_has_moved or rotation_has_moved
+
+    def _check_still_moving(self):
+        new_transforms = self.client.get_current_transforms()
+        if self._current_transforms is None:
+            self._current_transforms = new_transforms
+            return False
+
+        robot_is_moving = RqtHandeyeCalibratorWidget._has_moved(new_transforms.robot, self._current_transforms.robot)
+        tracking_is_moving = RqtHandeyeCalibratorWidget._has_moved(new_transforms.tracking,
+                                                                   self._current_transforms.tracking)
+
+        self._current_transforms = new_transforms
+
+        return robot_is_moving or tracking_is_moving
+
+    def _updateUI(self):
+        if self._check_still_moving():
+            self._widget.takeButton.setEnabled(False)
+        else:
+            self._widget.takeButton.setEnabled(True)
 
     def handle_take_sample(self):
         sample_list = self.client.take_sample()
@@ -155,4 +236,3 @@ class RqtHandeyeCalibratorWidget(QWidget):
     def handle_save_calibration(self):
         self.client.save()
         self._widget.saveButton.setEnabled(False)
-

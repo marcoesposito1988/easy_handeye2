@@ -108,6 +108,9 @@ class HandeyeSampler:
         ret.tracking = tracking.transform
         return ret
 
+    def current_transforms(self) -> Sample:
+        return self._get_transforms()
+
     def take_sample(self) -> bool:
         """
         Samples the transformations and appends the sample to the list.

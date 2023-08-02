@@ -34,6 +34,8 @@ class HandeyeServer(rclpy.node.Node):
                                                            self.list_algorithms)
         self.set_algorithm_service = self.create_service(ehm.srv.SetAlgorithm, hec.SET_ALGORITHM_TOPIC,
                                                          self.set_algorithm)
+        self.get_current_transforms_service = self.create_service(ehm.srv.TakeSample, hec.GET_CURRENT_TRANSFORMS_TOPIC,
+                                                           self.get_current_transforms)
         self.get_sample_list_service = self.create_service(ehm.srv.TakeSample, hec.GET_SAMPLE_LIST_TOPIC,
                                                            self.get_sample_lists)
         self.take_sample_service = self.create_service(ehm.srv.TakeSample, hec.TAKE_SAMPLE_TOPIC, self.take_sample)
@@ -88,6 +90,10 @@ class HandeyeServer(rclpy.node.Node):
 
     def _retrieve_sample_list(self):
         return self.sampler.get_samples()
+
+    def get_current_transforms(self, _, response: ehm.srv.TakeSample.Response):
+        response.samples.samples = [self.sampler.current_transforms()]
+        return response
 
     def get_sample_lists(self, _, response: ehm.srv.TakeSample.Response):
         response.samples = self._retrieve_sample_list()

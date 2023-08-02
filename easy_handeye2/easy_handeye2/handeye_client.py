@@ -18,6 +18,8 @@ class HandeyeClient:
         self.node.get_logger().info('Waiting for sampling services')
         self.get_sample_client = self.node.create_client(ehm.srv.TakeSample, hec.GET_SAMPLE_LIST_TOPIC)
         self.get_sample_client.wait_for_service()
+        self.get_current_transforms_client = self.node.create_client(ehm.srv.TakeSample, hec.GET_CURRENT_TRANSFORMS_TOPIC)
+        self.get_current_transforms_client.wait_for_service()
         self.take_sample_client = self.node.create_client(ehm.srv.TakeSample, hec.TAKE_SAMPLE_TOPIC)
         self.take_sample_client.wait_for_service()
         self.remove_sample_client = self.node.create_client(ehm.srv.RemoveSample, hec.REMOVE_SAMPLE_TOPIC)
@@ -61,6 +63,9 @@ class HandeyeClient:
         self.node.get_logger().info('All services connected, ready to go!')
 
     # services: sampling
+
+    def get_current_transforms(self):
+        return self.get_current_transforms_client.call(ehm.srv.TakeSample.Request()).samples.samples[0]
 
     def get_sample_list(self):
         return self.get_sample_client.call(ehm.srv.TakeSample.Request()).samples
