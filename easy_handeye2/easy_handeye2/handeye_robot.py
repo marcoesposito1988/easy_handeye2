@@ -1,10 +1,8 @@
-from __future__ import print_function
-from __future__ import division
 from transforms3d.quaternions import qmult
 from transforms3d.euler import euler2quat
 from geometry_msgs.msg import Quaternion
-from moveit_commander import MoveGroupCommander
 import rclpy
+from moveit.planning import MoveItPy
 import numpy as np
 from itertools import chain
 
@@ -32,11 +30,15 @@ class CalibrationMovements:
         # self.client = HandeyeClient()  # TODO: move around marker when eye_in_hand, automatically take samples via trigger topic
         if not move_group_namespace.endswith('/'):
             move_group_namespace = move_group_namespace + '/'
+
+        self.moveit = MoveItPy()
+
         if move_group_namespace != '/':
-            self.mgc = MoveGroupCommander(move_group_name, robot_description=move_group_namespace + 'robot_description',
+            raise NotImplementedError
+            self.mgc = self.moveit.get_planning_component(move_group_name, robot_description=move_group_namespace + 'robot_description',
                                           ns=move_group_namespace)
         else:
-            self.mgc = MoveGroupCommander(move_group_name)
+            self.mgc = self.moveit.get_planning_component(move_group_name)
         self.mgc.set_planner_id("RRTConnectkConfigDefault")  # TODO: this is only needed for the UR5
         self.mgc.set_max_velocity_scaling_factor(max_velocity_scaling)
         self.mgc.set_max_acceleration_scaling_factor(max_acceleration_scaling)
