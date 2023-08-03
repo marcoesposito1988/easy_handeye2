@@ -38,9 +38,9 @@ class HandeyeServer(rclpy.node.Node):
                                                            self.get_current_transforms)
         self.get_sample_list_service = self.create_service(ehm.srv.TakeSample, hec.GET_SAMPLE_LIST_TOPIC,
                                                            self.get_sample_lists)
-        self.take_sample_service = self.create_service(ehm.srv.TakeSample, hec.TAKE_SAMPLE_TOPIC, self.take_sample)
+        self.take_sample_service = self.create_service(ehm.srv.TakeSample, hec.TAKE_SAMPLE_TOPIC, self.take_sample_srv_callback)
         self.remove_sample_service = self.create_service(ehm.srv.RemoveSample, hec.REMOVE_SAMPLE_TOPIC,
-                                                         self.remove_sample)
+                                                         self.remove_sample_srv_callback)
         self.save_samples_service = self.create_service(ehm.srv.SaveSamples, hec.SAVE_SAMPLES_TOPIC,
                                                         self.save_samples)
         self.load_samples_service = self.create_service(ehm.srv.LoadSamples, hec.LOAD_SAMPLES_TOPIC,
@@ -51,9 +51,9 @@ class HandeyeServer(rclpy.node.Node):
                                                             self.save_calibration)
 
         # Useful for secondary input sources (e.g. programmable buttons on robot)
-        self.take_sample_topic = self.create_subscription(std_msgs.msg.Empty, hec.TAKE_SAMPLE_TOPIC, self.take_sample,
+        self.take_sample_topic = self.create_subscription(std_msgs.msg.Empty, hec.TAKE_SAMPLE_TOPIC, self.take_sample_msg_callback,
                                                           10)
-        self.compute_calibration_topic = self.create_subscription(std_msgs.msg.Empty, hec.REMOVE_SAMPLE_TOPIC,
+        self.remove_last_sample_topic = self.create_subscription(std_msgs.msg.Empty, hec.REMOVE_SAMPLE_TOPIC,
                                                                   self.remove_last_sample, 10)
 
         self.last_calibration = None
@@ -99,17 +99,18 @@ class HandeyeServer(rclpy.node.Node):
         response.samples = self._retrieve_sample_list()
         return response
 
-    def take_sample(self, _=None, response: ehm.srv.TakeSample.Response = None):
+    def take_sample_srv_callback(self, _, response: ehm.srv.TakeSample.Response):
         self.sampler.take_sample()
-        if response is not None:
-            # if it is the service, not the topic
-            response.samples = self._retrieve_sample_list()
-            return response
+        response.samples = self._retrieve_sample_list()
+        return response
 
-    def remove_last_sample(self):
+    def take_sample_msg_callback(self, _):
+        self.sampler.take_sample()
+
+    def remove_last_sample(self, _):
         self.sampler.remove_sample(len(self.sampler.samples) - 1)
 
-    def remove_sample(self, req: ehm.srv.RemoveSample.Request, response: ehm.srv.RemoveSample.Response):
+    def remove_sample_srv_callback(self, req: ehm.srv.RemoveSample.Request, response: ehm.srv.RemoveSample.Response):
         try:
             self.sampler.remove_sample(req.sample_index)
         except IndexError:
