@@ -3,6 +3,7 @@ project(easy_handeye2_msgs)
 
 find_package(ament_cmake REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
+find_package(service_msgs REQUIRED) # should be automatically added, it doesn't because we have subdirs in srv :\
 find_package(std_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 
@@ -25,7 +26,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
         srv/robot_movements/SelectTargetPose.srv
         srv/robot_movements/PlanToSelectedTargetPose.srv
         srv/robot_movements/ExecutePlan.srv
-        DEPENDENCIES std_msgs geometry_msgs
+        DEPENDENCIES std_msgs geometry_msgs service_msgs
 )
 
 ament_package()
