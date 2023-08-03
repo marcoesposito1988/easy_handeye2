@@ -1,14 +1,15 @@
 import math
 import pathlib
+import sys
 
 import numpy as np
 import transforms3d as tfs
 from ament_index_python import get_resource
+from python_qt_binding import loadUi
+from python_qt_binding.QtCore import QTimer, Signal
+from python_qt_binding.QtWidgets import QWidget
 from easy_handeye2.handeye_calibration import HandeyeCalibrationParametersProvider
 from easy_handeye2.handeye_client import HandeyeClient
-from python_qt_binding import loadUi
-from python_qt_binding.QtCore import QTimer
-from python_qt_binding.QtWidgets import QWidget
 
 
 def format_sample(sample):
@@ -20,31 +21,28 @@ def format_sample(sample):
 
 
 class RqtHandeyeCalibratorWidget(QWidget):
-    def __init__(self, parent, context):
-        super(RqtHandeyeCalibratorWidget, self).__init__()
-        self._parent = parent
-        self._plugin_context = context
+    _TITLE_PLUGIN = 'HandEye Calibrator'
 
+    # To be connected to PluginContainerWidget
+    sig_sysmsg = Signal(str)
+    sig_sysprogress = Signal(str)
+
+    def __init__(self, context):
+        super(RqtHandeyeCalibratorWidget, self).__init__()
+        self.setObjectName(self._TITLE_PLUGIN)
+        self.setWindowTitle(self._TITLE_PLUGIN)
+
+        self._plugin_context = context
         self._node = context.node
+
         self.parameters_provider = HandeyeCalibrationParametersProvider(self._node)
         self.parameters = self.parameters_provider.read()
 
+        self.client = HandeyeClient(self._node, self.parameters)
+
         self._current_transforms = None
 
-        # Process standalone plugin command-line arguments
-        from argparse import ArgumentParser
-        parser = ArgumentParser()
-        # Add argument(s) to the parser.
-        parser.add_argument("-q", "--quiet", action="store_true",
-                            dest="quiet",
-                            help="Put plugin in silent mode")
-        args, unknowns = parser.parse_known_args(context.argv())
-        if not args.quiet:
-            print('arguments: ', args)
-            print('unknowns: ', unknowns)
-
         # Create QWidgets
-        self._widget = QWidget()
         self._infoWidget = QWidget()
         # Get path to UI file which should be in the "resource" folder of this package
         _, package_path = get_resource('packages', 'easy_handeye2')
@@ -52,30 +50,16 @@ class RqtHandeyeCalibratorWidget(QWidget):
         ui_file = ui_dir / 'rqt_handeye.ui'
         ui_info_file = ui_dir / 'rqt_handeye_info.ui'
         # Extend the widget with all attributes and children from UI file
-        loadUi(str(ui_file.resolve()), self._widget)
+        loadUi(str(ui_file.resolve()), self)
         loadUi(str(ui_info_file.resolve()), self._infoWidget)
-        self._widget.horizontalLayout_infoAndActions.insertWidget(0, self._infoWidget)
-
-        # Give QObjects reasonable names
-        self._widget.setObjectName('RqtHandeyeCalibrationUI')
-        # Show _widget.windowTitle on left-top of each plugin (when
-        # it's set in _widget). This is useful when you open multiple
-        # plugins at once. Also if you open multiple instances of your
-        # plugin at once, these lines add number to make it easy to
-        # tell from pane to pane.
-        if context.serial_number() > 1:
-            self._widget.setWindowTitle(self._widget.windowTitle() + (' (%d)' % context.serial_number()))
-        # Add widget to the user interface
-        context.add_widget(self._widget)
-
-        self.client = HandeyeClient(self._node, self.parameters)
+        self.horizontalLayout_infoAndActions.insertWidget(0, self._infoWidget)
 
         resp = self.client.list_algorithms()
         for i, a in enumerate(resp.algorithms):
-            self._widget.calibAlgorithmComboBox.insertItem(i, a)
+            self.calibAlgorithmComboBox.insertItem(i, a)
         index_of_curr_alg = resp.algorithms.index(resp.current_algorithm)
-        self._widget.calibAlgorithmComboBox.setCurrentIndex(index_of_curr_alg)
-        self._widget.calibAlgorithmComboBox.currentTextChanged.connect(self.client.set_algorithm)
+        self.calibAlgorithmComboBox.setCurrentIndex(index_of_curr_alg)
+        self.calibAlgorithmComboBox.currentTextChanged.connect(self.client.set_algorithm)
 
         self._infoWidget.calibNameLineEdit.setText(self.parameters.name)
         self._infoWidget.trackingBaseFrameLineEdit.setText(self.parameters.tracking_base_frame)
@@ -87,13 +71,13 @@ class RqtHandeyeCalibratorWidget(QWidget):
         else:
             self._infoWidget.calibTypeLineEdit.setText("eye on base")
 
-        self._widget.takeButton.clicked[bool].connect(self.handle_take_sample)
-        self._widget.removeButton.clicked[bool].connect(self.handle_remove_sample)
-        self._widget.saveButton.clicked[bool].connect(self.handle_save_calibration)
-        self._widget.calibAlgorithmComboBox.currentIndexChanged.connect(self.handle_compute_calibration)
+        self.takeButton.clicked[bool].connect(self.handle_take_sample)
+        self.removeButton.clicked[bool].connect(self.handle_remove_sample)
+        self.saveButton.clicked[bool].connect(self.handle_save_calibration)
+        self.calibAlgorithmComboBox.currentIndexChanged.connect(self.handle_compute_calibration)
 
-        self._widget.removeButton.setEnabled(False)
-        self._widget.saveButton.setEnabled(False)
+        self.removeButton.setEnabled(False)
+        self.saveButton.setEnabled(False)
 
         sample_list = self.client.get_sample_list()
         self._display_sample_list(sample_list)
@@ -121,16 +105,16 @@ class RqtHandeyeCalibratorWidget(QWidget):
         # Usually used to open a modal configuration dialog
 
     def _display_sample_list(self, sample_list):
-        self._widget.sampleListWidget.clear()
+        self.sampleListWidget.clear()
 
         for i, s in enumerate(sample_list.samples):
             formatted_robot_sample = format_sample(s.robot)
             formatted_tracking_sample = format_sample(s.tracking)
-            self._widget.sampleListWidget.addItem(
+            self.sampleListWidget.addItem(
                 '{}) \n hand->world \n {} \n camera->marker\n {}\n'.format(i + 1, formatted_robot_sample,
                                                                            formatted_tracking_sample))
-        self._widget.sampleListWidget.setCurrentRow(len(sample_list.samples) - 1)
-        self._widget.removeButton.setEnabled(len(sample_list.samples) > 0)
+        self.sampleListWidget.setCurrentRow(len(sample_list.samples) - 1)
+        self.removeButton.setEnabled(len(sample_list.samples) > 0)
 
     @staticmethod
     def _translation_distance(t1, t2):
@@ -201,21 +185,21 @@ class RqtHandeyeCalibratorWidget(QWidget):
 
     def _updateUI(self):
         if self._check_still_moving():
-            self._widget.takeButton.setEnabled(False)
+            self.takeButton.setEnabled(False)
         else:
-            self._widget.takeButton.setEnabled(True)
+            self.takeButton.setEnabled(True)
 
     def handle_take_sample(self):
         sample_list = self.client.take_sample()
         self._display_sample_list(sample_list)
-        self._widget.saveButton.setEnabled(False)
+        self.saveButton.setEnabled(False)
         self.handle_compute_calibration()
 
     def handle_remove_sample(self):
-        index = self._widget.sampleListWidget.currentRow()
+        index = self.sampleListWidget.currentRow()
         sample_list = self.client.remove_sample(index)
         self._display_sample_list(sample_list)
-        self._widget.saveButton.setEnabled(False)
+        self.saveButton.setEnabled(False)
 
     def handle_compute_calibration(self):
         if len(self.client.get_sample_list().samples) > 2:
@@ -224,15 +208,27 @@ class RqtHandeyeCalibratorWidget(QWidget):
                 tr = result.calibration.transform.translation
                 qt = result.calibration.transform.rotation
                 t = f'Translation\n\tx: {tr.x:.6f}\n\ty: {tr.y:.6f}\n\tz: {tr.z:.6f})\nRotation\n\tx: {qt.x:.6f}\n\ty: {qt.y:.6f}\n\tz: {qt.z:.6f}\n\tw: {qt.w:.6f}'
-                self._widget.outputBox.setPlainText(t)
-                self._widget.saveButton.setEnabled(True)
+                self.outputBox.setPlainText(t)
+                self.saveButton.setEnabled(True)
             else:
-                self._widget.outputBox.setPlainText('The calibration could not be computed')
-                self._widget.saveButton.setEnabled(False)
+                self.outputBox.setPlainText('The calibration could not be computed')
+                self.saveButton.setEnabled(False)
         else:
-            self._widget.outputBox.setPlainText('Too few samples, the calibration cannot not be computed')
-            self._widget.saveButton.setEnabled(False)
+            self.outputBox.setPlainText('Too few samples, the calibration cannot not be computed')
+            self.saveButton.setEnabled(False)
 
     def handle_save_calibration(self):
         self.client.save()
-        self._widget.saveButton.setEnabled(False)
+        self.saveButton.setEnabled(False)
+
+    def emit_sysmsg(self, msg_str):
+        self.sig_sysmsg.emit(msg_str)
+
+
+if __name__ == '__main__':
+    # main should be used only for debug purpose.
+    # This launches this QWidget as a standalone rqt gui.
+    from rqt_gui.main import Main
+
+    main = Main()
+    sys.exit(main.main(sys.argv, standalone='rqt_handeye_calibrator'))

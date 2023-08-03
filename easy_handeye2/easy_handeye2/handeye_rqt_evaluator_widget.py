@@ -1,30 +1,32 @@
 import pathlib
+import sys
 
 import numpy as np
 from ament_index_python import get_resource
-from easy_handeye2.handeye_calibration import load_calibration
 from python_qt_binding import loadUi
-from python_qt_binding.QtCore import QTimer
+from python_qt_binding.QtCore import QTimer, Signal
+from python_qt_binding.QtWidgets import QWidget, QListWidgetItem, QLabel, QVBoxLayout
 from rclpy.node import ParameterDescriptor, ParameterType
 from rclpy.time import Duration, Time
 from tf2_ros import TransformListener, Buffer, LookupException, ExtrapolationException, ConnectivityException
-
-try:
-    from python_qt_binding.QtGui import QWidget, QListWidgetItem, QLabel
-except ImportError:
-    try:
-        from python_qt_binding.QtWidgets import QWidget, QListWidgetItem, QLabel, QVBoxLayout
-    except:
-        raise ImportError('Could not import QWidgets')
+from easy_handeye2.handeye_calibration import load_calibration
 
 
 class RqtHandeyeEvaluatorWidget(QWidget):
-    def __init__(self, parent, context):
-        super(RqtHandeyeEvaluatorWidget, self).__init__()
-        self._parent = parent
-        self._plugin_context = context
+    _TITLE_PLUGIN = 'HandEye Evaluator'
 
+    # To be connected to PluginContainerWidget
+    sig_sysmsg = Signal(str)
+    sig_sysprogress = Signal(str)
+
+    def __init__(self, context, node=None):
+        super(RqtHandeyeEvaluatorWidget, self).__init__()
+        self.setObjectName(self._TITLE_PLUGIN)
+        self.setWindowTitle(self._TITLE_PLUGIN)
+
+        self._plugin_context = context
         self._node = context.node
+
         # self.parameters_provider = HandeyeCalibrationParametersProvider(self._node)
         # self.parameters = self.parameters_provider.read()
         self._node.declare_parameter('name', descriptor=ParameterDescriptor(type=ParameterType.PARAMETER_STRING))
@@ -32,20 +34,7 @@ class RqtHandeyeEvaluatorWidget(QWidget):
         self.calibration = load_calibration(name)
         self.parameters = self.calibration.parameters
 
-        # Process standalone plugin command-line arguments
-        from argparse import ArgumentParser
-        parser = ArgumentParser()
-        # Add argument(s) to the parser.
-        parser.add_argument("-q", "--quiet", action="store_true",
-                            dest="quiet",
-                            help="Put plugin in silent mode")
-        args, unknowns = parser.parse_known_args(context.argv())
-        if not args.quiet:
-            print('arguments: ', args)
-            print('unknowns: ', unknowns)
-
         # Create QWidget
-        self._widget = QWidget()
         self._infoWidget = QWidget()
         # Get path to UI file which should be in the "resource" folder of this package
         _, package_path = get_resource('packages', 'easy_handeye2')
@@ -54,20 +43,18 @@ class RqtHandeyeEvaluatorWidget(QWidget):
         ui_file = ui_dir / 'rqt_handeye_evaluator.ui'
         ui_info_file = ui_dir / 'rqt_handeye_info.ui'
         # Extend the widget with all attributes and children from UI file
-        loadUi(ui_file, self._widget)
+        loadUi(ui_file, self)
         loadUi(ui_info_file, self._infoWidget)
-        self._widget.layout().insertWidget(0, self._infoWidget)
+        self.layout().insertWidget(0, self._infoWidget)
         # Give QObjects reasonable names
-        self._widget.setObjectName('RqtHandeyeCalibrationUI')
+        self.setObjectName('RqtHandeyeCalibrationUI')
         # Show _widget.windowTitle on left-top of each plugin (when 
         # it's set in _widget). This is useful when you open multiple 
         # plugins at once. Also if you open multiple instances of your 
         # plugin at once, these lines add number to make it easy to 
         # tell from pane to pane.
         if context.serial_number() > 1:
-            self._widget.setWindowTitle(self._widget.windowTitle() + (' (%d)' % context.serial_number()))
-        # Add widget to the user interface
-        context.add_widget(self._widget)
+            self.setWindowTitle(self.windowTitle() + (' (%d)' % context.serial_number()))
 
         self._infoWidget.calibNameLineEdit.setText(self.parameters.name)
         self._infoWidget.trackingBaseFrameLineEdit.setText(self.parameters.tracking_base_frame)
@@ -79,10 +66,10 @@ class RqtHandeyeEvaluatorWidget(QWidget):
         else:
             self._infoWidget.calibTypeLineEdit.setText("eye on base")
 
-        self.output_label = self._widget.label_message
+        self.output_label = self.label_message
         self.output_label.setText('Waiting for samples...')
 
-        self._widget.pushButton_reset.clicked.connect(self.reset)
+        self.pushButton_reset.clicked.connect(self.reset)
 
         self.is_eye_in_hand = self.parameters.calibration_type == 'eye_in_hand'
         self.robot_base_frame = self.parameters.robot_base_frame
@@ -106,7 +93,7 @@ class RqtHandeyeEvaluatorWidget(QWidget):
         self.measurement_transforms = []  # used to measure the quality of the calibration: should have the same value
         self.robot_transforms = []  # used to determine when to sample: we wait for a steady state that has not been sampled yet
 
-        self._widget.show()
+        self.show()
 
     def tick(self):
         # wait for steady state to avoid problems with lag
@@ -172,7 +159,7 @@ class RqtHandeyeEvaluatorWidget(QWidget):
         self.updateUI()
 
     def updateUI(self):
-        self._widget.spinBox_samples.setValue(len(self.measurement_transforms))
+        self.spinBox_samples.setValue(len(self.measurement_transforms))
         if len(self.measurement_transforms) > 2:
             def translation_from_msg(msg):
                 t = msg.transform.translation
@@ -185,11 +172,11 @@ class RqtHandeyeEvaluatorWidget(QWidget):
             translations_max_divergence = np.max(translations_from_avg)
             self._node.get_logger().info("Maximum divergence: {}".format(translations_max_divergence))
 
-            self._widget.doubleSpinBox_error.setEnabled(True)
-            self._widget.doubleSpinBox_error.setValue(translations_max_divergence.max())
+            self.doubleSpinBox_error.setEnabled(True)
+            self.doubleSpinBox_error.setValue(translations_max_divergence.max())
         else:
-            self._widget.doubleSpinBox_error.setValue(0)
-            self._widget.doubleSpinBox_error.setEnabled(False)
+            self.doubleSpinBox_error.setValue(0)
+            self.doubleSpinBox_error.setEnabled(False)
 
     @staticmethod
     def transform_to_concatenated_translation_quaternion(transform):
@@ -231,3 +218,15 @@ class RqtHandeyeEvaluatorWidget(QWidget):
         # Comment in to signal that the plugin has a way to configure
         # This will enable a setting button (gear icon) in each dock widget title bar
         # Usually used to open a modal configuration dialog
+
+    def emit_sysmsg(self, msg_str):
+        self.sig_sysmsg.emit(msg_str)
+
+
+if __name__ == '__main__':
+    # main should be used only for debug purpose.
+    # This launches this QWidget as a standalone rqt gui.
+    from rqt_gui.main import Main
+
+    main = Main()
+    sys.exit(main.main(sys.argv, standalone='rqt_handeye_evaluator'))

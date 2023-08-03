@@ -7,7 +7,7 @@ from launch_ros.actions import Node
 def generate_launch_description():
     arg_name = DeclareLaunchArgument('name')
 
-    handeye_rqt_evaluator = Node(package='easy_handeye2', executable='rqt_evaluator.py',
+    handeye_rqt_evaluator = Node(package='easy_handeye2', executable='rqt_handeye_evaluator',
                                   name='handeye_rqt_evaluator',
                                   # arguments=['--ros-args', '--log-level', 'debug'],
                                   parameters=[{

@@ -17,17 +17,20 @@ class HandeyeServerRobot(rclpy.node.Node):
             namespace = self.get_namespace()
         if not namespace.endswith('/'):
             namespace = namespace+'/'
-        self.parameters = HandeyeCalibrationParameters.read_from_parameter_server(self, namespace)
+        self.declare_parameter('move_group', 'manipulator')
+        self.declare_parameter('move_group_namespace', '')
         self.declare_parameter('rotation_delta_degrees', 25)
         self.declare_parameter('translation_delta_meters', 0.1)
         self.declare_parameter('max_velocity_scaling', 0.5)
         self.declare_parameter('max_acceleration_scaling', 0.5)
+        move_group = self.get_parameter('move_group').get_parameter_value().string_value
+        move_group_namespace = self.get_parameter('move_group_namespace').get_parameter_value().string_value
         angle_delta = math.radians(self.get_parameter('rotation_delta_degrees').get_parameter_value().double_value)
         translation_delta = self.get_parameter('translation_delta_meters').get_parameter_value().double_value
         max_velocity_scaling = self.get_parameter('max_velocity_scaling').get_parameter_value().double_value
         max_acceleration_scaling = self.get_parameter('max_acceleration_scaling').get_parameter_value().double_value
-        self.local_mover = CalibrationMovements(self, move_group_name=self.parameters.move_group,
-                                                move_group_namespace=self.parameters.move_group_namespace,
+        self.local_mover = CalibrationMovements(self, move_group_name=move_group,
+                                                move_group_namespace=move_group_namespace,
                                                 max_velocity_scaling=max_velocity_scaling,
                                                 max_acceleration_scaling=max_acceleration_scaling,
                                                 angle_delta=angle_delta, translation_delta=translation_delta)

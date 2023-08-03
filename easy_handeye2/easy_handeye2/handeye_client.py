@@ -37,8 +37,7 @@ class HandeyeClient:
         self.save_calibration_client = self.node.create_client(ehm.srv.SaveCalibration, hec.SAVE_CALIBRATION_TOPIC)
         self.save_calibration_client.wait_for_service()
 
-        if False:  # TODO
-        # if not self.parameters.freehand_robot_movement:
+        if self.parameters.automatic_robot_movement:
             # init services: robot movement
             self.node.get_logger().info('Waiting for robot motion services')
             self.check_starting_pose_client = self.node.create_client(ehm.srv.CheckStartingPose,
