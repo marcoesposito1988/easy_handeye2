@@ -5,7 +5,7 @@ from typing import Optional
 import easy_handeye2_msgs.msg
 import tf2_ros
 import yaml
-from tf2_ros import Buffer, TransformListener, TransformBroadcaster
+from tf2_ros import Buffer, TransformListener, TransformBroadcaster, LookupException
 from rosidl_runtime_py import message_to_yaml, set_message_fields
 from easy_handeye2_msgs.msg import Sample, SampleList
 import rclpy
@@ -39,6 +39,9 @@ class HandeyeSampler:
         """
         used to publish the calibration after saving it
         """
+        self.tf_future = None
+        self.robot = None
+        self.tracking = None
 
         # internal input data
         self.samples: easy_handeye2.msg.SampleList = SampleList()
@@ -89,24 +92,62 @@ class HandeyeSampler:
         Samples the transforms at the given time.
         """
         if time is None:
-            time = self.node.get_clock().now() - rclpy.time.Duration(nanoseconds=200000000)
+            time = self.node.get_clock().now()
 
-        # here we trick the library (it is actually made for eye_in_hand only). Trust me, I'm an engineer
-        if self.handeye_parameters.calibration_type == 'eye_in_hand':
-            robot = self.tfBuffer.lookup_transform(self.handeye_parameters.robot_base_frame,
-                                                   self.handeye_parameters.robot_effector_frame, time,
-                                                   Duration(seconds=10))
-        else:
-            robot = self.tfBuffer.lookup_transform(self.handeye_parameters.robot_effector_frame,
-                                                   self.handeye_parameters.robot_base_frame, time,
-                                                   Duration(seconds=10))
-        tracking = self.tfBuffer.lookup_transform(self.handeye_parameters.tracking_base_frame,
-                                                  self.handeye_parameters.tracking_marker_frame, time,
-                                                  Duration(seconds=10))
+
+        self.tf_future = self.tfBuffer.wait_for_transform_async(self.handeye_parameters.robot_base_frame,
+                                                   self.handeye_parameters.robot_effector_frame, time)
+        self.tf_future.add_done_callback(self.on_ready_robot)
+
+
+        self.tf_future = self.tfBuffer.wait_for_transform_async(self.handeye_parameters.tracking_base_frame,
+                                                   self.handeye_parameters.tracking_marker_frame, time)
+        self.tf_future.add_done_callback(self.on_ready_tracking)
+
+        # # here we trick the library (it is actually made for eye_in_hand only). Trust me, I'm an engineer
+        # if self.handeye_parameters.calibration_type == 'eye_in_hand':
+        #     robot = self.tfBuffer.wait_for_transform_async(self.handeye_parameters.robot_base_frame,
+        #                                            self.handeye_parameters.robot_effector_frame, time,
+        #                                            Duration(seconds=10))
+        # else:
+        #     robot = self.tfBuffer.wait_for_transform_async(self.handeye_parameters.robot_effector_frame,
+        #                                            self.handeye_parameters.robot_base_frame, time,
+        #                                            Duration(seconds=10))
+        # tracking = self.tfBuffer.wait_for_transform_async(self.handeye_parameters.tracking_base_frame,
+        #                                           self.handeye_parameters.tracking_marker_frame, time,
+        #                                           Duration(seconds=10))
         ret = Sample()
-        ret.robot = robot.transform
-        ret.tracking = tracking.transform
+
+        if self.robot is not None:
+            ret.robot = self.robot.transform
+        if self.tracking is not None:
+            ret.tracking = self.tracking.transform
         return ret
+
+
+    def on_ready_robot(self, future):
+        # with self._lock:
+        self._tf_future = None
+        if future.result():
+            try:
+                self.robot = self.tfBuffer.lookup_transform(self.handeye_parameters.robot_base_frame,
+                                                self.handeye_parameters.robot_effector_frame, Time())
+            except LookupException:
+                self.node.get_logger().info('transform no longer available')
+            else:
+                self.node.get_logger().info('Got robot transform')
+
+    def on_ready_tracking(self, future):
+        # with self._lock:
+        self._tf_future = None
+        if future.result():
+            try:
+                self.tracking  = self.tfBuffer.lookup_transform(self.handeye_parameters.tracking_base_frame,
+                                                self.handeye_parameters.tracking_marker_frame, Time())
+            except LookupException:
+                self.node.get_logger().info('transform no longer available')
+            else:
+                self.node.get_logger().info('Got tracking transform')
 
     def current_transforms(self) -> Sample:
         return self._get_transforms()
