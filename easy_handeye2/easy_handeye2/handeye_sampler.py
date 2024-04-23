@@ -84,7 +84,7 @@ class HandeyeSampler:
         self.node.get_logger().info('All expected transforms are available on tf; ready to take samples')
         return True
 
-    def _get_transforms(self, time: Optional[rclpy.time.Time] = None) -> easy_handeye2_msgs.msg.Sample:
+    def _get_transforms(self, time: Optional[rclpy.time.Time] = None) -> Sample:
         """
         Samples the transforms at the given time.
         """

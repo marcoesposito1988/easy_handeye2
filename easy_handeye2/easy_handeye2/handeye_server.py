@@ -3,9 +3,7 @@ import itertools
 import rclpy
 import std_msgs
 import easy_handeye2_msgs as ehm
-from easy_handeye2_msgs import msg, srv
 from rclpy.executors import ExternalShutdownException
-from std_msgs import msg
 
 import easy_handeye2 as hec
 from easy_handeye2.handeye_calibration import save_calibration, HandeyeCalibrationParametersProvider
@@ -23,12 +21,31 @@ class HandeyeServer(rclpy.node.Node):
         self.get_logger().info(f'Read parameters for calibration "{self.parameters.name}"')
 
         self.sampler = HandeyeSampler(self, handeye_parameters=self.parameters)
-        self.sampler.wait_for_tf_init()
+        self.setup_timer = self.create_timer(2.0, self.setup_services_and_topics)
 
         self.calibration_backends = {'OpenCV': HandeyeCalibrationBackendOpenCV()}
         self.calibration_algorithm = 'OpenCV/Tsai-Lenz'
 
         # setup calibration services and topics
+        self.list_algorithms_service = None
+        self.set_algorithm_service = None
+        self.get_current_transforms_service = None
+        self.get_sample_list_service = None
+        self.take_sample_service = None
+        self.remove_sample_service = None
+        self.save_samples_service = None
+        self.load_samples_service = None
+        self.compute_calibration_service = None
+        self.save_calibration_service = None
+        self.take_sample_topic = None
+        self.remove_last_sample_topic = None
+
+        self.last_calibration = None
+
+    def setup_services_and_topics(self):
+        if not self.sampler.wait_for_tf_init():
+            self.get_logger().warn('Waiting for TF initialization...')
+            return
 
         self.list_algorithms_service = self.create_service(ehm.srv.ListAlgorithms, hec.LIST_ALGORITHMS_TOPIC,
                                                            self.list_algorithms)
@@ -55,8 +72,7 @@ class HandeyeServer(rclpy.node.Node):
                                                           10)
         self.remove_last_sample_topic = self.create_subscription(std_msgs.msg.Empty, hec.REMOVE_SAMPLE_TOPIC,
                                                                   self.remove_last_sample, 10)
-
-        self.last_calibration = None
+        self.setup_timer.cancel()
 
     # algorithm
 
