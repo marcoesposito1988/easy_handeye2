@@ -3,7 +3,9 @@ import itertools
 import rclpy
 import std_msgs
 import easy_handeye2_msgs as ehm
+from easy_handeye2_msgs import msg, srv
 from rclpy.executors import ExternalShutdownException
+from std_msgs import msg
 
 import easy_handeye2 as hec
 from easy_handeye2.handeye_calibration import save_calibration, HandeyeCalibrationParametersProvider
