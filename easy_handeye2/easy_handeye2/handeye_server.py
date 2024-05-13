@@ -1,6 +1,7 @@
 import itertools
 
 import rclpy
+from rclpy.executors import MultiThreadedExecutor
 import std_msgs
 import easy_handeye2_msgs as ehm
 from easy_handeye2_msgs import msg, srv
@@ -110,7 +111,12 @@ class HandeyeServer(rclpy.node.Node):
         return self.sampler.get_samples()
 
     def get_current_transforms(self, _, response: ehm.srv.TakeSample.Response):
-        response.samples.samples = [self.sampler.current_transforms()]
+        transforms = self.sampler.current_transforms()
+        if transforms is None:
+            response.samples.samples = []
+            return response
+
+        response.samples.samples = [transforms]
         return response
 
     def get_sample_lists(self, _, response: ehm.srv.TakeSample.Response):
@@ -189,9 +195,10 @@ def main(args=None):
     rclpy.init(args=args)
 
     handeye_server = HandeyeServer()
-
+    executor = MultiThreadedExecutor(num_threads=4)
+    executor.add_node(handeye_server)
     try:
-        rclpy.spin(handeye_server)
+        executor.spin()
     except (KeyboardInterrupt, ExternalShutdownException):
         pass
     finally:
