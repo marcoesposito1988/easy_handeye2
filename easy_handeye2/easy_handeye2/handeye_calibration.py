@@ -17,12 +17,12 @@ class HandeyeCalibrationParametersProvider:
     def __init__(self, node: Node):
         self.node = node
         # declare and read parameters
-        self.node.declare_parameter('name', descriptor=ParameterDescriptor(type=ParameterType.PARAMETER_STRING))
-        self.node.declare_parameter('calibration_type', descriptor=ParameterDescriptor(type=ParameterType.PARAMETER_STRING))
-        self.node.declare_parameter('robot_base_frame', descriptor=ParameterDescriptor(type=ParameterType.PARAMETER_STRING))
-        self.node.declare_parameter('robot_effector_frame', descriptor=ParameterDescriptor(type=ParameterType.PARAMETER_STRING))
-        self.node.declare_parameter('tracking_base_frame', descriptor=ParameterDescriptor(type=ParameterType.PARAMETER_STRING))
-        self.node.declare_parameter('tracking_marker_frame', descriptor=ParameterDescriptor(type=ParameterType.PARAMETER_STRING))
+        self.node.declare_parameter('name', '')
+        self.node.declare_parameter('calibration_type', '')
+        self.node.declare_parameter('robot_base_frame', '')
+        self.node.declare_parameter('robot_effector_frame', '')
+        self.node.declare_parameter('tracking_base_frame', '')
+        self.node.declare_parameter('tracking_marker_frame', '')
         self.node.declare_parameter('freehand_robot_movement', True)
 
     def read(self):
