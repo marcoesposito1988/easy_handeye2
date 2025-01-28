@@ -89,7 +89,9 @@ class HandeyeSampler:
         Samples the transforms at the given time.
         """
         if time is None:
-            time = self.node.get_clock().now() - rclpy.time.Duration(nanoseconds=200000000)
+            # we are enforcing that the system is steady in the GUI, so we can just take the latest value for each transform
+            # it would not be a good idea to calibrate with a moving system anyway, since most tracking systems would not keep up well with motion
+            time = rclpy.time.Time()
 
         # here we trick the library (it is actually made for eye_in_hand only). Trust me, I'm an engineer
         try:
