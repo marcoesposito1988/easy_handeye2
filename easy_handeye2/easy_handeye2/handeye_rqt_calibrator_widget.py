@@ -202,8 +202,10 @@ class RqtHandeyeCalibratorWidget(QWidget):
         new_transforms = self.client.get_current_transforms()
         if new_transforms is None or self._check_still_moving(new_transforms):
             self._widget.takeButton.setEnabled(False)
+            self._widget.statusLabel.setText("Motion of the tf frames detected, can't acquire a sample until the system is steady")
         else:
             self._widget.takeButton.setEnabled(True)
+            self._widget.statusLabel.setText("Ready to acquire samples")
 
     def handle_take_sample(self):
         sample_list = self.client.take_sample()

@@ -24,6 +24,9 @@
        <layout class="QVBoxLayout" name="verticalLayout_2">
         <item>
          <widget class="QPushButton" name="takeButton">
+          <property name="toolTip">
+           <string>Sample the transformations from tf</string>
+          </property>
           <property name="text">
            <string>Take Sample</string>
           </property>
@@ -31,6 +34,9 @@
         </item>
         <item>
          <widget class="QPushButton" name="removeButton">
+          <property name="toolTip">
+           <string>Remove the selected sample</string>
+          </property>
           <property name="text">
            <string>Remove Sample</string>
           </property>
@@ -38,8 +44,11 @@
         </item>
         <item>
          <widget class="QPushButton" name="saveButton">
+          <property name="toolTip">
+           <string>Save the calibration to ~/.ros2/easy_handeye2/calibrations/CALIBRATION_NAME.calib</string>
+          </property>
           <property name="text">
-           <string>Save</string>
+           <string>Save Calibration</string>
           </property>
          </widget>
         </item>
@@ -89,6 +98,13 @@
       </widget>
      </item>
     </layout>
+   </item>
+   <item>
+    <widget class="QLabel" name="statusLabel">
+     <property name="text">
+      <string>Starting...</string>
+     </property>
+    </widget>
    </item>
   </layout>
  </widget>
