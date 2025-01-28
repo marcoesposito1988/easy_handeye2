@@ -24,6 +24,10 @@ class HandeyeClient:
         self.take_sample_client.wait_for_service()
         self.remove_sample_client = self.node.create_client(ehm.srv.RemoveSample, hec.REMOVE_SAMPLE_TOPIC)
         self.remove_sample_client.wait_for_service()
+        self.save_samples_client = self.node.create_client(ehm.srv.SaveSamples, hec.SAVE_SAMPLES_TOPIC)
+        self.save_samples_client.wait_for_service()
+        self.load_samples_client = self.node.create_client(ehm.srv.LoadSamples, hec.LOAD_SAMPLES_TOPIC)
+        self.load_samples_client.wait_for_service()
 
         # init services: calibration
         self.node.get_logger().info('Waiting for calibration services')
@@ -78,6 +82,13 @@ class HandeyeClient:
 
     def remove_sample(self, index):
         return self.remove_sample_client.call(ehm.srv.RemoveSample.Request(sample_index=index)).samples
+
+    def save_samples(self):
+        return self.save_samples_client.call(ehm.srv.SaveSamples.Request()).success
+
+    def load_samples(self):
+        res = self.load_samples_client.call(ehm.srv.LoadSamples.Request())
+        return res.success, res.samples
 
     # services: calibration
 

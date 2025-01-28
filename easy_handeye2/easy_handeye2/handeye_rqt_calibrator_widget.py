@@ -89,6 +89,8 @@ class RqtHandeyeCalibratorWidget(QWidget):
 
         self._widget.takeButton.clicked[bool].connect(self.handle_take_sample)
         self._widget.removeButton.clicked[bool].connect(self.handle_remove_sample)
+        self._widget.saveSamplesButton.clicked[bool].connect(self.handle_save_samples)
+        self._widget.loadSamplesButton.clicked[bool].connect(self.handle_load_samples)
         self._widget.saveButton.clicked[bool].connect(self.handle_save_calibration)
         self._widget.calibAlgorithmComboBox.currentIndexChanged.connect(self.handle_compute_calibration)
 
@@ -218,6 +220,23 @@ class RqtHandeyeCalibratorWidget(QWidget):
         sample_list = self.client.remove_sample(index)
         self._display_sample_list(sample_list)
         self._widget.saveButton.setEnabled(False)
+        self.handle_compute_calibration()
+
+    def handle_save_samples(self):
+        success = self.client.save_samples()
+        if success:
+            self._widget.statusLabel.setText("Sample list saved")
+        else:
+            self._widget.statusLabel.setText("Failed to save samples")
+
+    def handle_load_samples(self):
+        success, samples = self.client.load_samples()
+        if success:
+            self._display_sample_list(samples)
+            self._widget.statusLabel.setText("Sample list loaded")
+            self.handle_compute_calibration()
+        else:
+            self._widget.statusLabel.setText("Failed to load samples")
 
     def handle_compute_calibration(self):
         if len(self.client.get_sample_list().samples) > 2:
