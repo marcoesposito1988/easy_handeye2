@@ -1,0 +1,25 @@
+name: CI
+
+on: [push, pull_request]
+
+jobs:
+  industrial_ci:
+    strategy:
+      matrix: # matrix is the product of entries
+        ROS_DISTRO: [
+#          humble,
+          jazzy
+        ]
+        ROS_REPO: [
+#          testing,
+          main
+        ]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ros-industrial/industrial_ci@master
+        env:
+          ROS_DISTRO: ${{ matrix.ROS_DISTRO }}
+          ROS_REPO: ${{ matrix.ROS_REPO }}
+          PIP_BREAK_SYSTEM_PACKAGES: 1 # required since python 3.12 for rosdep to work
+          DOWNSTREAM_WORKSPACE: "github:marcoesposito1988/easy_handeye2_demo#master"
