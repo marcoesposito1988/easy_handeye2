@@ -1,0 +1,20 @@
+parameters:
+  name: easy_handeye2_demo_eih
+  calibration_type: eye_in_hand
+  robot_base_frame: panda_link0
+  robot_effector_frame: panda_link8
+  tracking_base_frame: tracking_base_frame
+  tracking_marker_frame: tracking_marker_frame
+  freehand_robot_movement: true
+  move_group_namespace: /
+  move_group: manipulator
+transform:
+  translation:
+    x: 0.12009306887856315
+    y: 0.2116190606726046
+    z: 0.13691492966286453
+  rotation:
+    x: 6.205326949104052e-05
+    y: -6.72437392182923e-05
+    z: -3.414432056616761e-05
+    w: 0.9999999952309185
